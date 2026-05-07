@@ -4,10 +4,10 @@ import axios from "axios";
 const channelStore=createSlice({
 
 name:'channel',
-initialState:{ChannelList:[]},
+initialState:{channelList:[]},
 reducers:{
 setChannels(state,action)
-{state.ChannelList=action.payload}}
+{state.channelList=action.payload}}
 }
 )
 

@@ -13,14 +13,16 @@ PennyPath is a full-stack expense tracking application designed to help users ma
 - **Axios**: Promise-based HTTP client for API requests.
 - **React Router**: Declarative routing for the single-page application.
 
-### Backend (Placeholder)
-- **Express**: Fast, unopinionated, minimalist web framework for Node.js.
-- **PostgreSQL**: Robust relational database for persistent storage.
+### Backend
+- **Python 3.10+**: Core programming language for the backend.
+- **FastAPI**: Modern, high-performance web framework for building APIs.
+- **Uvicorn**: Lightning-fast ASGI server implementation.
+- **SQLite/PostgreSQL**: Database for persistent storage.
 
 ### Tooling
-- **Vitest**: Next-generation testing framework.
-- **ESLint**: Pluggable linting utility for JavaScript and TypeScript.
-- **Prettier**: Opinionated code formatter.
+- **Vitest**: Next-generation testing framework for the frontend.
+- **ESLint/Prettier**: Code quality and formatting tools.
+- **Pip**: Python package installer.
 
 ## 📁 Project Structure
 
@@ -31,8 +33,9 @@ PennyPath is a full-stack expense tracking application designed to help users ma
 │   ├── modules/     # Redux modules (counter, channel)
 │   ├── slices/      # Redux slices (expense)
 │   └── store.ts     # Redux store configuration
-├── server/          # Backend application (Express)
-│   └── db/          # Database configuration and migrations
+├── server/          # Backend application (Python + FastAPI)
+│   ├── main.py      # FastAPI entry point
+│   └── db/          # Database configuration
 ├── public/          # Static assets
 └── index.html       # Application entry point
 ```
@@ -47,18 +50,29 @@ PennyPath is a full-stack expense tracking application designed to help users ma
    cd PennyPath
    ```
 
-2. Install dependencies:
+2. Install Frontend dependencies:
    ```bash
    npm install
    ```
 
+3. Install Backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
 ### Development
 
-Start the development server:
-```bash
-npm run dev
-```
-The application will be available at `http://localhost:5173`.
+1. Start the Frontend development server:
+   ```bash
+   npm run dev
+   ```
+   The frontend will be available at `http://localhost:5173`.
+
+2. Start the Backend server:
+   ```bash
+   python server/main.py
+   ```
+   The backend will be available at `http://localhost:8000`.
 
 ### Testing
 
