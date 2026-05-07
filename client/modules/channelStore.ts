@@ -15,7 +15,7 @@ setChannels(state,action)
 const{setChannels}=channelStore.actions
 const fetchChannList = ()=>{
 return async(dispatch)=>{
-const res = await axios.get('url')
+const res = await axios.get('/api/channels')
 dispatch(setChannels(res.data.data.channels))
 }}
 
