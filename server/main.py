@@ -44,14 +44,14 @@ class Expense(ExpenseBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Category(BaseModel):
     id: int
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # API Endpoints
 @app.get("/api/categories", response_model=dict)
