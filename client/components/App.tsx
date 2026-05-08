@@ -1,12 +1,12 @@
-import { useDispatch, useSelector } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '../hooks'
 import { increment, decrement,addToNum } from '../modules/counterStore'
 import { fetchChannList } from '../modules/channelStore'
 import { useEffect } from 'react'
 
 function App() {
-  const { count } = useSelector((state) => state.counter)
-  const{channelList}= useSelector(state=>state.channel)
-  const dispatch = useDispatch()
+  const { count } = useAppSelector((state) => state.counter)
+  const { channelList } = useAppSelector((state) => state.channel)
+  const dispatch = useAppDispatch()
   //使用useEffect触发异步请求执行
   useEffect(()=>{dispatch(fetchChannList())},[dispatch])
   return (
