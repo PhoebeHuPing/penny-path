@@ -30,9 +30,8 @@ PennyPath is a full-stack expense tracking application designed to help users ma
 /
 ├── client/          # Frontend application (React + TypeScript)
 │   ├── components/  # Reusable UI components
-│   ├── modules/     # Redux modules (counter, channel)
-│   ├── slices/      # Redux slices (expense)
-│   └── store.ts     # Redux store configuration
+L33- │   ├── modules/     # Redux modules (counter, channel, expense)
+L34- │   └── store.ts     # Redux store configuration
 ├── server/          # Backend application (Python + FastAPI)
 │   ├── main.py      # FastAPI entry point
 │   └── db/          # Database configuration

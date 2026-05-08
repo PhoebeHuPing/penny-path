@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { increment, decrement,addToNum } from '../modules/counterStore'
-import { fetchChannList } from '../modules/channelStore'
+import { increment, decrement,addToNum } from '../modules/counterSlice'
+import { fetchChannList } from '../modules/channelSlice'
 import { useEffect } from 'react'
 
 function App() {
