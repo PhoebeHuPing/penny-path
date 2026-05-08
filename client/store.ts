@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import counterReducer from './modules/counterSlice'
-import channelReducer from './modules/channelSlice'
+import categoryReducer from './modules/categorySlice'
 import expenseReducer from './modules/expenseSlice'
 
 
 const store = configureStore({
   reducer: {
     counter: counterReducer,
-    channel: channelReducer,
+    category: categoryReducer,
     expenses: expenseReducer,
   },
 })
