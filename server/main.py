@@ -44,27 +44,45 @@ class Expense(ExpenseBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Category(BaseModel):
     id: int
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class CategoryListResponse(BaseModel):
+    categories: List[Category]
+
+class CategoriesResponse(BaseModel):
+    data: CategoryListResponse
+
+class ExpenseListResponse(BaseModel):
+    expenses: List[Expense]
+
+class ExpensesResponse(BaseModel):
+    data: ExpenseListResponse
+
+class ExpenseSingleResponse(BaseModel):
+    expense: Expense
+
+class ExpenseCreateResponse(BaseModel):
+    data: ExpenseSingleResponse
 
 # API Endpoints
-@app.get("/api/categories", response_model=dict)
+@app.get("/api/categories", response_model=CategoriesResponse)
 async def get_categories(db: Session = Depends(get_db)):
     categories = db.query(DBCategory).all()
     return {"data": {"categories": categories}}
 
-@app.get("/api/expenses", response_model=dict)
+@app.get("/api/expenses", response_model=ExpensesResponse)
 async def get_expenses(db: Session = Depends(get_db)):
     expenses = db.query(DBExpense).order_by(DBExpense.date.desc()).all()
     return {"data": {"expenses": expenses}}
 
-@app.post("/api/expenses", response_model=dict)
+@app.post("/api/expenses", response_model=ExpenseCreateResponse)
 async def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
     db_expense = DBExpense(**expense.dict())
     db.add(db_expense)
