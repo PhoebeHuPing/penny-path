@@ -24,11 +24,17 @@ class DBExpense(Base):
     amount = Column(Float)
     category_id = Column(Integer)
 
+    def __repr__(self):
+        return f"<DBExpense(id={self.id}, amount={self.amount}, date={self.date})>"
+
 class DBCategory(Base):
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
+
+    def __repr__(self):
+        return f"<DBCategory(id={self.id}, name='{self.name}')>"
 
 def init_db():
     Base.metadata.create_all(bind=engine)

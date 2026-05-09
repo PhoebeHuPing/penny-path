@@ -1,24 +1,27 @@
-import { createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice } from '@reduxjs/toolkit'
+import axios from 'axios'
 
-const channelStore=createSlice({
-
-name:'channel',
-initialState:{channelList:[]},
-reducers:{
-setChannels(state,action)
-{state.channelList=action.payload}}
-}
-)
+const categoryStore = createSlice({
+  name: 'categoryList',
+  initialState: { categoryList: [] },
+  reducers: {
+    setCategoryList(state, action) {
+      state.categoryList = action.payload
+    },
+  },
+})
 
 //异步请求部分
-const{setChannels}=channelStore.actions
-const fetchChannList = ()=>{
-return async(dispatch)=>{
-const res = await axios.get('/api/channels')
-dispatch(setChannels(res.data.data.channels))
-}}
+const { setCategoryList } = categoryStore.actions
+const fetchCategoryList = () => {
+  return async (dispatch) => {
+    const res = await axios.get('/api/categories')
+    console.log(res)
 
-export{fetchChannList}
-const reducer =channelStore.reducer
+    dispatch(setCategoryList(res.data.data.categories))
+  }
+}
+
+export { fetchCategoryList }
+const reducer = categoryStore.reducer
 export default reducer
