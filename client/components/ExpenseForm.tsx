@@ -7,7 +7,7 @@ const ExpenseForm: React.FC = () => {
   const [location, setLocation] = useState('')
   const [amount, setAmount] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  
+
   const dateRef = useRef<HTMLInputElement>(null)
   const locationRef = useRef<HTMLInputElement>(null)
   const amountRef = useRef<HTMLInputElement>(null)
@@ -17,7 +17,10 @@ const ExpenseForm: React.FC = () => {
   const { categoryList } = useAppSelector((state) => state.category)
   const dispatch = useAppDispatch()
 
-  const handleKeyDown = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLElement>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent,
+    nextRef: React.RefObject<HTMLElement>,
+  ) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       nextRef.current?.focus()
@@ -26,24 +29,26 @@ const ExpenseForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!date || !location || !amount || !categoryId) {
       alert('Please fill in all fields')
       return
     }
 
-    dispatch(postExpense({
-      date,
-      location,
-      amount: parseFloat(amount),
-      category_id: parseInt(categoryId),
-    }))
-    
+    dispatch(
+      postExpense({
+        date,
+        location,
+        amount: parseFloat(amount),
+        category_id: parseInt(categoryId),
+      }),
+    )
+
     // Reset form
     setLocation('')
     setAmount('')
     setCategoryId('')
-    
+
     // Focus back to date after submit
     dateRef.current?.focus()
   }
@@ -52,34 +57,34 @@ const ExpenseForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="expense-form">
       <div className="form-group">
         <label>Date</label>
-        <input 
+        <input
           ref={dateRef}
-          type="date" 
-          value={date} 
-          onChange={(e) => setDate(e.target.value)} 
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, locationRef)}
         />
       </div>
 
       <div className="form-group">
         <label>Location</label>
-        <input 
+        <input
           ref={locationRef}
-          type="text" 
-          value={location} 
-          onChange={(e) => setLocation(e.target.value)} 
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, amountRef)}
           placeholder="e.g. Starbucks"
         />
       </div>
-      
+
       <div className="form-group">
-        <label>Amount (¥)</label>
-        <input 
+        <label>Amount ($)</label>
+        <input
           ref={amountRef}
-          type="number" 
-          value={amount} 
-          onChange={(e) => setAmount(e.target.value)} 
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, categoryRef)}
           placeholder="0.00"
           step="0.01"
@@ -88,20 +93,24 @@ const ExpenseForm: React.FC = () => {
 
       <div className="form-group">
         <label>Category</label>
-        <select 
+        <select
           ref={categoryRef}
-          value={categoryId} 
+          value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
           onKeyDown={(e) => handleKeyDown(e, submitRef)}
         >
           <option value="">Select Category</option>
-          {categoryList.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
+          {categoryList.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
           ))}
         </select>
       </div>
 
-      <button ref={submitRef} type="submit" className="submit-btn">Add Expense</button>
+      <button ref={submitRef} type="submit" className="submit-btn">
+        Add Expense
+      </button>
     </form>
   )
 }
