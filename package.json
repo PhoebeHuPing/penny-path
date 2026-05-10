@@ -11,7 +11,8 @@
     "build": "vite build",
     "test": "vitest",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
-    "format": "prettier -w '**/*.{js,jsx,ts,tsx}'"
+    "format": "prettier -w '**/*.{js,jsx,ts,tsx}'",
+    "start": "npm run dev & npm run dev:py"
   },
   "eslintConfig": {
     "extends": "@devacademy/eslint-config/react",
