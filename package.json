@@ -24,6 +24,7 @@
   "license": "ISC",
   "devDependencies": {
     "@devacademy/eslint-config": "^1.10.2",
+    "@tailwindcss/vite": "^4.3.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^20.17.17",
@@ -31,6 +32,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.5.0",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
@@ -41,10 +43,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "nodemon": "^3.1.14",
     "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.14",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^7.13.0",
+    "tailwindcss": "^4.3.0",
     "typescript": "^5.3.3",
     "vite": "^7.3.1",
     "vitest": "^3.0.5"
