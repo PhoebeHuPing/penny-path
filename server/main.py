@@ -53,6 +53,15 @@ class Category(BaseModel):
     class Config:
         from_attributes = True
 
+class CategoryCreate(BaseModel):
+    name: str
+
+class CategorySingleResponse(BaseModel):
+    category: Category
+
+class CategoryCreateResponse(BaseModel):
+    data: CategorySingleResponse
+
 class CategoryListResponse(BaseModel):
     categories: List[Category]
 
@@ -76,6 +85,18 @@ class ExpenseCreateResponse(BaseModel):
 async def get_categories(db: Session = Depends(get_db)):
     categories = db.query(DBCategory).all()
     return {"data": {"categories": categories}}
+
+@app.post("/api/categories", response_model=CategoryCreateResponse)
+async def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
+    db_category = db.query(DBCategory).filter(DBCategory.name == category.name).first()
+    if db_category:
+        raise HTTPException(status_code=400, detail="Category already exists")
+    
+    db_category = DBCategory(name=category.name)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return {"data": {"category": db_category}}
 
 @app.get("/api/expenses", response_model=ExpensesResponse)
 async def get_expenses(db: Session = Depends(get_db)):
