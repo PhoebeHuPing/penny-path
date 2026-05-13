@@ -8,20 +8,28 @@ const categoryStore = createSlice({
     setCategoryList(state, action) {
       state.categoryList = action.payload
     },
+    appendCategory(state, action) {
+      state.categoryList.push(action.payload)
+    },
   },
 })
 
 //异步请求部分
-const { setCategoryList } = categoryStore.actions
+const { setCategoryList, appendCategory } = categoryStore.actions
 const fetchCategoryList = () => {
   return async (dispatch) => {
     const res = await axios.get('/api/categories')
-    console.log(res)
-
     dispatch(setCategoryList(res.data.data.categories))
   }
 }
 
-export { fetchCategoryList }
+const addCategory = (name: string) => {
+  return async (dispatch) => {
+    const res = await axios.post('/api/categories', { name })
+    dispatch(appendCategory(res.data.data.category))
+  }
+}
+
+export { fetchCategoryList, addCategory }
 const reducer = categoryStore.reducer
 export default reducer
