@@ -12,3 +12,10 @@ promptkit
 
 # Project structure documentation
 PROJECT_STRUCTURE.md
+
+# Python
+venv/
+get-pip.py
+__pycache__/
+*.pyc
+*.pyo
