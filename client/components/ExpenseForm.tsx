@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { postExpense } from '../modules/expenseSlice'
+import { triggerToast } from '../modules/appSlice'
 
 const ExpenseForm: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
@@ -31,7 +32,7 @@ const ExpenseForm: React.FC = () => {
     e.preventDefault()
 
     if (!date || !location || !amount || !categoryId) {
-      alert('Please fill in all fields')
+      dispatch(triggerToast('Please fill in all fields', 'error'))
       return
     }
 

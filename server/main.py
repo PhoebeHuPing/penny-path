@@ -70,6 +70,7 @@ class CategoriesResponse(BaseModel):
 
 class ExpenseListResponse(BaseModel):
     expenses: List[Expense]
+    total_count: int
 
 class ExpensesResponse(BaseModel):
     data: ExpenseListResponse
@@ -99,9 +100,10 @@ async def create_category(category: CategoryCreate, db: Session = Depends(get_db
     return {"data": {"category": db_category}}
 
 @app.get("/api/expenses", response_model=ExpensesResponse)
-async def get_expenses(db: Session = Depends(get_db)):
-    expenses = db.query(DBExpense).order_by(DBExpense.date.desc()).all()
-    return {"data": {"expenses": expenses}}
+async def get_expenses(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    total_count = db.query(DBExpense).count()
+    expenses = db.query(DBExpense).order_by(DBExpense.date.desc()).offset(skip).limit(limit).all()
+    return {"data": {"expenses": expenses, "total_count": total_count}}
 
 @app.post("/api/expenses", response_model=ExpenseCreateResponse)
 async def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
