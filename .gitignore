@@ -9,3 +9,6 @@ promptkit
 
 # Windows Zone.Identifier files
 *:Zone.Identifier
+
+# Project structure documentation
+PROJECT_STRUCTURE.md
