@@ -15,7 +15,13 @@ import {
 import { useAppSelector } from '../hooks'
 
 const CHART_COLORS = [
-  '#4a90e2', '#7c5cbf', '#e8734a', '#2db88a', '#e84a6b', '#f5a623', '#50c9e8',
+  '#4a90e2',
+  '#7c5cbf',
+  '#e8734a',
+  '#2db88a',
+  '#e84a6b',
+  '#f5a623',
+  '#50c9e8',
 ]
 
 // Recharts custom tooltip style
@@ -35,7 +41,12 @@ const PieTooltip = ({ active, payload }: any) => {
     return (
       <div style={CustomTooltipStyle}>
         <p className="font-bold mb-0.5">{name}</p>
-        <p>¥{(value as number).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+        <p>
+          $
+          {(value as number).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
+        </p>
       </div>
     )
   }
@@ -49,7 +60,10 @@ const LineTooltip = ({ active, payload, label }: any) => {
         <p className="font-bold mb-1">{label}</p>
         {payload.map((entry: any) => (
           <p key={entry.name} style={{ color: entry.color }}>
-            {entry.name}: ¥{(entry.value as number).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {entry.name}: $
+            {(entry.value as number).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </p>
         ))}
       </div>
@@ -94,13 +108,19 @@ const SpendingCharts: React.FC = () => {
     for (let i = 13; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
-      const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const key = d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
       dayMap[key] = 0
     }
 
     allExpenses.forEach((e) => {
       const d = new Date(e.date + 'T00:00:00')
-      const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const key = d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
       if (key in dayMap) {
         dayMap[key] += e.amount
       }
@@ -164,7 +184,10 @@ const SpendingCharts: React.FC = () => {
                 stroke="none"
               >
                 {pieData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip content={<PieTooltip />} />
@@ -176,16 +199,23 @@ const SpendingCharts: React.FC = () => {
               <div key={entry.name} className="flex items-center gap-1.5">
                 <div
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ background: CHART_COLORS[index % CHART_COLORS.length] }}
+                  style={{
+                    background: CHART_COLORS[index % CHART_COLORS.length],
+                  }}
                 />
-                <span className="text-xs font-semibold text-slate-500">{entry.name}</span>
+                <span className="text-xs font-semibold text-slate-500">
+                  {entry.name}
+                </span>
               </div>
             ))}
           </div>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={lineData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+          <LineChart
+            data={lineData}
+            margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis
               dataKey="date"
@@ -198,7 +228,7 @@ const SpendingCharts: React.FC = () => {
               tick={{ fontSize: 10, fill: '#94a3b8' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => `¥${v}`}
+              tickFormatter={(v) => `$${v}`}
               width={50}
             />
             <Tooltip content={<LineTooltip />} />
@@ -209,7 +239,12 @@ const SpendingCharts: React.FC = () => {
               stroke="#4a90e2"
               strokeWidth={2.5}
               dot={{ fill: '#4a90e2', r: 3, strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: '#4a90e2', strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{
+                r: 5,
+                fill: '#4a90e2',
+                strokeWidth: 2,
+                stroke: '#fff',
+              }}
             />
           </LineChart>
         </ResponsiveContainer>
