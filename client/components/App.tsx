@@ -1,6 +1,11 @@
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { fetchCategoryList, addCategory } from '../modules/categorySlice'
-import { fetchExpenses, fetchAllExpensesForChart, removeExpense, PAGE_SIZE } from '../modules/expenseSlice'
+import {
+  fetchExpenses,
+  fetchAllExpensesForChart,
+  removeExpense,
+  PAGE_SIZE,
+} from '../modules/expenseSlice'
 import { useEffect, useState } from 'react'
 import ExpenseForm from './ExpenseForm'
 import Toast from './Toast'
@@ -8,7 +13,9 @@ import SpendingCharts from './SpendingCharts'
 
 function App() {
   const { categoryList } = useAppSelector((state) => state.category)
-  const { expenses, loading, page, totalCount } = useAppSelector((state) => state.expenses)
+  const { expenses, loading, page, totalCount } = useAppSelector(
+    (state) => state.expenses,
+  )
   const dispatch = useAppDispatch()
 
   const [newCategory, setNewCategory] = useState('')
@@ -29,12 +36,16 @@ function App() {
   // Dashboard stats — use totalCount for record count, allExpenses for amounts
   const { allExpenses } = useAppSelector((state) => state.expenses)
   const totalSpent = allExpenses.reduce((acc, curr) => acc + curr.amount, 0)
-  const averageSpend = allExpenses.length > 0 ? totalSpent / allExpenses.length : 0
+  const averageSpend =
+    allExpenses.length > 0 ? totalSpent / allExpenses.length : 0
 
-  const categorySpending = allExpenses.reduce((acc: Record<number, number>, curr) => {
-    acc[curr.category_id] = (acc[curr.category_id] || 0) + curr.amount
-    return acc
-  }, {})
+  const categorySpending = allExpenses.reduce(
+    (acc: Record<number, number>, curr) => {
+      acc[curr.category_id] = (acc[curr.category_id] || 0) + curr.amount
+      return acc
+    },
+    {},
+  )
 
   let topCategoryId = -1
   let maxSpend = 0
@@ -44,7 +55,8 @@ function App() {
       topCategoryId = parseInt(catIdStr)
     }
   })
-  const topCategoryName = topCategoryId !== -1 ? getCategoryName(topCategoryId) : 'None'
+  const topCategoryName =
+    topCategoryId !== -1 ? getCategoryName(topCategoryId) : 'None'
 
   const handleAddCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,28 +80,38 @@ function App() {
         <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
           PennyPath
         </h1>
-        <p className="text-slate-500 font-medium">Track your wealth, one penny at a time.</p>
+        <p className="text-slate-500 font-medium">
+          Track your wealth, one penny at a time.
+        </p>
       </header>
 
       {/* Stats Summary Panel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-br from-brand/5 to-brand/10 p-6 rounded-2xl border border-brand/10">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">Total Spent</p>
+          <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
+            Total Spent
+          </p>
           <p className="text-3xl font-black text-slate-800">
-            ¥{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            $
+            {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Average / Transaction</p>
+          <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">
+            Average / Transaction
+          </p>
           <p className="text-3xl font-black text-slate-800">
-            ¥{averageSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            $
+            {averageSpend.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Top Category</p>
-          <p className="text-3xl font-black text-brand">
-            {topCategoryName}
+          <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">
+            Top Category
           </p>
+          <p className="text-3xl font-black text-brand">{topCategoryName}</p>
         </div>
       </div>
 
@@ -98,7 +120,9 @@ function App() {
         <div className="lg:col-span-2 space-y-6">
           <section className="expense-card">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800">Recent Transactions</h2>
+              <h2 className="text-xl font-bold text-slate-800">
+                Recent Transactions
+              </h2>
               <span className="text-sm font-semibold text-brand bg-brand/10 px-3 py-1 rounded-full">
                 {totalCount} Records
               </span>
@@ -112,7 +136,9 @@ function App() {
             ) : expenses.length === 0 ? (
               <div className="text-center py-16">
                 <div className="text-4xl mb-4">💸</div>
-                <p className="text-slate-400 font-medium">No records yet. Start tracking!</p>
+                <p className="text-slate-400 font-medium">
+                  No records yet. Start tracking!
+                </p>
               </div>
             ) : (
               <div className="overflow-hidden">
@@ -127,7 +153,9 @@ function App() {
                           {getCategoryName(exp.category_id).charAt(0)}
                         </div>
                         <div>
-                          <h3 className="font-bold text-slate-800">{exp.location}</h3>
+                          <h3 className="font-bold text-slate-800">
+                            {exp.location}
+                          </h3>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                               {exp.date}
@@ -141,15 +169,27 @@ function App() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-lg font-black text-slate-800">
-                          ¥{exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          $
+                          {exp.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                         <button
                           onClick={() => dispatch(removeExpense(exp.id))}
                           className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all cursor-pointer"
                           title="Delete transaction"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -169,17 +209,29 @@ function App() {
                         disabled={page === 1}
                         className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        // Show pages centered around current page
-                        let startPage = Math.max(1, page - 2)
-                        const endPage = Math.min(totalPages, startPage + 4)
-                        startPage = Math.max(1, endPage - 4)
-                        return startPage + i
-                      })
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          // Show pages centered around current page
+                          let startPage = Math.max(1, page - 2)
+                          const endPage = Math.min(totalPages, startPage + 4)
+                          startPage = Math.max(1, endPage - 4)
+                          return startPage + i
+                        },
+                      )
                         .filter((p) => p >= 1 && p <= totalPages)
                         .map((p) => (
                           <button
@@ -199,8 +251,17 @@ function App() {
                         disabled={page === totalPages}
                         className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -217,14 +278,18 @@ function App() {
         {/* Right Panel: Add Form and Categories */}
         <div className="space-y-8">
           <section className="expense-card bg-slate-900 border-none shadow-xl shadow-slate-200">
-            <h2 className="text-xl font-bold text-white mb-6">Add Transaction</h2>
+            <h2 className="text-xl font-bold text-white mb-6">
+              Add Transaction
+            </h2>
             <ExpenseForm />
           </section>
 
           {/* Categories Card */}
           <section className="expense-card">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-800">Spending Breakdown</h2>
+              <h2 className="text-xl font-bold text-slate-800">
+                Spending Breakdown
+              </h2>
             </div>
 
             {/* Visual breakdown progress bars */}
@@ -237,7 +302,11 @@ function App() {
                     <div className="flex justify-between text-xs font-bold">
                       <span className="text-slate-600">{item.name}</span>
                       <span className="text-slate-500">
-                        ¥{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ({percent.toFixed(0)}%)
+                        $
+                        {amount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}{' '}
+                        ({percent.toFixed(0)}%)
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
@@ -251,7 +320,9 @@ function App() {
               })}
             </div>
 
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">All Categories</h3>
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
+              All Categories
+            </h3>
             <div className="flex flex-wrap gap-2 mb-4">
               {categoryList.map((item) => (
                 <span
@@ -284,7 +355,10 @@ function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setShowCatInput(false); setNewCategory('') }}
+                      onClick={() => {
+                        setShowCatInput(false)
+                        setNewCategory('')
+                      }}
                       className="px-4 py-2 border border-slate-200 text-slate-500 text-sm font-bold rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
                     >
                       Cancel
@@ -296,8 +370,17 @@ function App() {
                   onClick={() => setShowCatInput(true)}
                   className="w-full flex items-center justify-center gap-2 py-2 border-2 border-dashed border-slate-200 text-slate-400 text-sm font-bold rounded-xl hover:border-brand hover:text-brand transition-all cursor-pointer group"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:scale-110 transition-transform" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 group-hover:scale-110 transition-transform"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   New Category
                 </button>

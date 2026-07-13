@@ -57,7 +57,9 @@ const ExpenseForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Date</label>
+        <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+          Date
+        </label>
         <input
           ref={dateRef}
           type="date"
@@ -69,7 +71,9 @@ const ExpenseForm: React.FC = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black uppercase tracking-widest text-slate-400">Location</label>
+        <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+          Location
+        </label>
         <input
           ref={locationRef}
           type="text"
@@ -83,9 +87,13 @@ const ExpenseForm: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-black uppercase tracking-widest text-slate-400">Amount</label>
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+            Amount
+          </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">¥</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+              $
+            </span>
             <input
               ref={amountRef}
               type="number"
@@ -100,7 +108,9 @@ const ExpenseForm: React.FC = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-black uppercase tracking-widest text-slate-400">Category</label>
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+            Category
+          </label>
           <select
             ref={categoryRef}
             value={categoryId}
@@ -108,7 +118,9 @@ const ExpenseForm: React.FC = () => {
             onKeyDown={(e) => handleKeyDown(e, submitRef)}
             className="input-field bg-slate-800 border-slate-700 text-white focus:border-brand appearance-none"
           >
-            <option value="" className="bg-slate-900">Select</option>
+            <option value="" className="bg-slate-900">
+              Select
+            </option>
             {categoryList.map((cat) => (
               <option key={cat.id} value={cat.id} className="bg-slate-900">
                 {cat.name}
@@ -130,4 +142,3 @@ const ExpenseForm: React.FC = () => {
 }
 
 export default ExpenseForm
-
