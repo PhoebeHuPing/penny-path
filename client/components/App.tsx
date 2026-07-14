@@ -178,6 +178,7 @@ function App() {
                           onClick={() => dispatch(removeExpense(exp.id))}
                           className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all cursor-pointer"
                           title="Delete transaction"
+                          aria-label={`Delete transaction at ${exp.location} for $${exp.amount.toFixed(2)}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +200,7 @@ function App() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-4">
+                  <nav aria-label="Pagination" className="flex items-center justify-between pt-6 border-t border-slate-100 mt-4">
                     <p className="text-xs font-semibold text-slate-400">
                       Page {page} of {totalPages} · {totalCount} total
                     </p>
@@ -208,6 +209,7 @@ function App() {
                         onClick={() => handlePageChange(page - 1)}
                         disabled={page === 1}
                         className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        aria-label="Go to previous page"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -237,6 +239,8 @@ function App() {
                           <button
                             key={p}
                             onClick={() => handlePageChange(p)}
+                            aria-label={`Go to page ${p}`}
+                            aria-current={p === page ? 'page' : undefined}
                             className={`w-8 h-8 rounded-lg text-sm font-bold transition-all cursor-pointer ${
                               p === page
                                 ? 'bg-brand text-white shadow-sm shadow-brand/30'
@@ -250,6 +254,7 @@ function App() {
                         onClick={() => handlePageChange(page + 1)}
                         disabled={page === totalPages}
                         className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        aria-label="Go to next page"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -265,7 +270,7 @@ function App() {
                         </svg>
                       </button>
                     </div>
-                  </div>
+                  </nav>
                 )}
               </div>
             )}
