@@ -57,10 +57,11 @@ const ExpenseForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+        <label htmlFor="expense-date" className="text-xs font-black uppercase tracking-widest text-slate-400">
           Date
         </label>
         <input
+          id="expense-date"
           ref={dateRef}
           type="date"
           value={date}
@@ -71,10 +72,11 @@ const ExpenseForm: React.FC = () => {
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+        <label htmlFor="expense-location" className="text-xs font-black uppercase tracking-widest text-slate-400">
           Location
         </label>
         <input
+          id="expense-location"
           ref={locationRef}
           type="text"
           value={location}
@@ -87,14 +89,15 @@ const ExpenseForm: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+          <label htmlFor="expense-amount" className="text-xs font-black uppercase tracking-widest text-slate-400">
             Amount
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold" aria-hidden="true">
               $
             </span>
             <input
+              id="expense-amount"
               ref={amountRef}
               type="number"
               value={amount}
@@ -108,10 +111,11 @@ const ExpenseForm: React.FC = () => {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-black uppercase tracking-widest text-slate-400">
+          <label htmlFor="expense-category" className="text-xs font-black uppercase tracking-widest text-slate-400">
             Category
           </label>
           <select
+            id="expense-category"
             ref={categoryRef}
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}

@@ -42,7 +42,7 @@ const Toast: React.FC = () => {
   const { bgColor, icon } = getStyleAndIcon()
 
   return (
-    <div className="fixed top-6 right-6 z-50 toast-animate">
+    <div className="fixed top-6 right-6 z-50 toast-animate" role="alert" aria-live="assertive" aria-atomic="true">
       <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-md shadow-lg ${bgColor}`}>
         <div className="flex-shrink-0">{icon}</div>
         <span className="text-sm font-extrabold tracking-tight">{toast.message}</span>

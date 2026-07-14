@@ -170,7 +170,7 @@ const SpendingCharts: React.FC = () => {
       </div>
 
       {activeTab === 'pie' ? (
-        <div>
+        <div role="img" aria-label={`Pie chart showing spending by category: ${pieData.map(d => `${d.name} $${d.value.toFixed(2)}`).join(', ')}`}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie
@@ -211,6 +211,7 @@ const SpendingCharts: React.FC = () => {
           </div>
         </div>
       ) : (
+        <div role="img" aria-label="Line chart showing daily spending trend over the last 14 days">
         <ResponsiveContainer width="100%" height={250}>
           <LineChart
             data={lineData}
@@ -248,6 +249,7 @@ const SpendingCharts: React.FC = () => {
             />
           </LineChart>
         </ResponsiveContainer>
+        </div>
       )}
     </div>
   )
