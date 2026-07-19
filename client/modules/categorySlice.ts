@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { triggerToast } from './appSlice'
+import type { AppDispatch } from '../store'
 
 export interface CategoryItem {
   id: number
@@ -32,7 +33,7 @@ const categoryStore = createSlice({
 const { setCategoryList, appendCategory } = categoryStore.actions
 
 const fetchCategoryList = () => {
-  return async (dispatch: any) => {
+  return async (dispatch: AppDispatch) => {
     try {
       const res = await axios.get('/api/categories')
       dispatch(setCategoryList(res.data.data.categories))
@@ -43,7 +44,7 @@ const fetchCategoryList = () => {
 }
 
 const addCategory = (name: string) => {
-  return async (dispatch: any) => {
+  return async (dispatch: AppDispatch) => {
     const trimmedName = name.trim()
     if (!trimmedName) {
       dispatch(triggerToast('Category name cannot be empty', 'error'))
@@ -53,8 +54,9 @@ const addCategory = (name: string) => {
       const res = await axios.post('/api/categories', { name: trimmedName })
       dispatch(appendCategory(res.data.data.category))
       dispatch(triggerToast(`Category "${trimmedName}" added successfully!`, 'success'))
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.detail || 'Failed to add category'
+    } catch (error) {
+      const axiosError = error as AxiosError<{ detail?: string }>
+      const errorMsg = axiosError.response?.data?.detail || 'Failed to add category'
       dispatch(triggerToast(errorMsg, 'error'))
     }
   }

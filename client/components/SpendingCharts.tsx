@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
 } from 'recharts'
 import { useAppSelector } from '../hooks'
 
@@ -35,7 +34,25 @@ const CustomTooltipStyle: React.CSSProperties = {
   backdropFilter: 'blur(8px)',
 }
 
-const PieTooltip = ({ active, payload }: any) => {
+interface TooltipPayloadEntry {
+  name: string
+  value: number
+  color: string
+  payload: { name: string; value: number }
+}
+
+interface PieTooltipProps {
+  active?: boolean
+  payload?: TooltipPayloadEntry[]
+}
+
+interface LineTooltipProps {
+  active?: boolean
+  payload?: TooltipPayloadEntry[]
+  label?: string
+}
+
+const PieTooltip = ({ active, payload }: PieTooltipProps) => {
   if (active && payload && payload.length) {
     const { name, value } = payload[0].payload
     return (
@@ -53,12 +70,12 @@ const PieTooltip = ({ active, payload }: any) => {
   return null
 }
 
-const LineTooltip = ({ active, payload, label }: any) => {
+const LineTooltip = ({ active, payload, label }: LineTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div style={CustomTooltipStyle}>
         <p className="font-bold mb-1">{label}</p>
-        {payload.map((entry: any) => (
+        {payload.map((entry) => (
           <p key={entry.name} style={{ color: entry.color }}>
             {entry.name}: $
             {(entry.value as number).toLocaleString(undefined, {
@@ -79,9 +96,6 @@ const SpendingCharts: React.FC = () => {
   const { categoryList } = useAppSelector((state) => state.category)
   const [activeTab, setActiveTab] = useState<ChartTab>('pie')
 
-  const getCategoryName = (id: number) =>
-    categoryList.find((c) => c.id === id)?.name || 'Unknown'
-
   // Pie chart data — category spending breakdown
   const pieData = useMemo(() => {
     const map: Record<number, number> = {}
@@ -90,7 +104,7 @@ const SpendingCharts: React.FC = () => {
     })
     return Object.entries(map)
       .map(([catId, total]) => ({
-        name: getCategoryName(Number(catId)),
+        name: categoryList.find((c) => c.id === Number(catId))?.name || 'Unknown',
         value: total,
       }))
       .filter((d) => d.value > 0)

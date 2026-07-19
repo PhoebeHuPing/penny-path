@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { triggerToast } from './appSlice'
+import type { AppDispatch } from '../store'
 
 export const PAGE_SIZE = 10
 
@@ -66,7 +67,7 @@ export const { setExpenses, setAllExpenses, addExpenseSuccess, deleteExpenseSucc
   expenseSlice.actions
 
 // Async actions
-export const fetchExpenses = (page = 1) => async (dispatch: any) => {
+export const fetchExpenses = (page = 1) => async (dispatch: AppDispatch) => {
   dispatch(setLoading(true))
   dispatch(setPage(page))
   try {
@@ -81,7 +82,7 @@ export const fetchExpenses = (page = 1) => async (dispatch: any) => {
   }
 }
 
-export const fetchAllExpensesForChart = () => async (dispatch: any) => {
+export const fetchAllExpensesForChart = () => async (dispatch: AppDispatch) => {
   try {
     const res = await axios.get('/api/expenses?skip=0&limit=1000')
     dispatch(setAllExpenses(res.data.data.expenses))
@@ -90,19 +91,20 @@ export const fetchAllExpensesForChart = () => async (dispatch: any) => {
   }
 }
 
-export const postExpense = (expense: Omit<Expense, 'id'>) => async (dispatch: any) => {
+export const postExpense = (expense: Omit<Expense, 'id'>) => async (dispatch: AppDispatch) => {
   try {
     const res = await axios.post('/api/expenses', expense)
     dispatch(addExpenseSuccess(res.data.data.expense))
     dispatch(triggerToast('Transaction recorded successfully!', 'success'))
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to post expense:', error)
-    const errorMsg = error.response?.data?.detail || 'Failed to add transaction'
+    const axiosError = error as AxiosError<{ detail?: string }>
+    const errorMsg = axiosError.response?.data?.detail || 'Failed to add transaction'
     dispatch(triggerToast(errorMsg, 'error'))
   }
 }
 
-export const removeExpense = (id: number) => async (dispatch: any) => {
+export const removeExpense = (id: number) => async (dispatch: AppDispatch) => {
   try {
     await axios.delete(`/api/expenses/${id}`)
     dispatch(deleteExpenseSuccess(id))
