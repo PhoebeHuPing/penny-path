@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import axios, { AxiosError } from 'axios'
+import { AxiosError } from 'axios'
+import api from '../api'
 import { triggerToast } from './appSlice'
 import type { AppDispatch } from '../store'
 
@@ -72,7 +73,7 @@ export const fetchExpenses = (page = 1) => async (dispatch: AppDispatch) => {
   dispatch(setPage(page))
   try {
     const skip = (page - 1) * PAGE_SIZE
-    const res = await axios.get(`/api/expenses?skip=${skip}&limit=${PAGE_SIZE}`)
+    const res = await api.get(`/api/expenses?skip=${skip}&limit=${PAGE_SIZE}`)
     dispatch(setExpenses({ expenses: res.data.data.expenses, total_count: res.data.data.total_count }))
   } catch (error) {
     console.error('Failed to fetch expenses:', error)
@@ -84,7 +85,7 @@ export const fetchExpenses = (page = 1) => async (dispatch: AppDispatch) => {
 
 export const fetchAllExpensesForChart = () => async (dispatch: AppDispatch) => {
   try {
-    const res = await axios.get('/api/expenses?skip=0&limit=1000')
+    const res = await api.get('/api/expenses?skip=0&limit=1000')
     dispatch(setAllExpenses(res.data.data.expenses))
   } catch (error) {
     console.error('Failed to fetch all expenses for chart:', error)
@@ -93,7 +94,7 @@ export const fetchAllExpensesForChart = () => async (dispatch: AppDispatch) => {
 
 export const postExpense = (expense: Omit<Expense, 'id'>) => async (dispatch: AppDispatch) => {
   try {
-    const res = await axios.post('/api/expenses', expense)
+    const res = await api.post('/api/expenses', expense)
     dispatch(addExpenseSuccess(res.data.data.expense))
     dispatch(triggerToast('Transaction recorded successfully!', 'success'))
   } catch (error) {
@@ -106,7 +107,7 @@ export const postExpense = (expense: Omit<Expense, 'id'>) => async (dispatch: Ap
 
 export const removeExpense = (id: number) => async (dispatch: AppDispatch) => {
   try {
-    await axios.delete(`/api/expenses/${id}`)
+    await api.delete(`/api/expenses/${id}`)
     dispatch(deleteExpenseSuccess(id))
     dispatch(triggerToast('Transaction deleted.', 'info'))
   } catch (error) {

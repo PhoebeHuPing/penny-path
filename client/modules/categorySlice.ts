@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import axios, { AxiosError } from 'axios'
+import { AxiosError } from 'axios'
+import api from '../api'
 import { triggerToast } from './appSlice'
 import type { AppDispatch } from '../store'
 
@@ -35,7 +36,7 @@ const { setCategoryList, appendCategory } = categoryStore.actions
 const fetchCategoryList = () => {
   return async (dispatch: AppDispatch) => {
     try {
-      const res = await axios.get('/api/categories')
+      const res = await api.get('/api/categories')
       dispatch(setCategoryList(res.data.data.categories))
     } catch (error) {
       console.error('Failed to fetch categories:', error)
@@ -51,7 +52,7 @@ const addCategory = (name: string) => {
       return
     }
     try {
-      const res = await axios.post('/api/categories', { name: trimmedName })
+      const res = await api.post('/api/categories', { name: trimmedName })
       dispatch(appendCategory(res.data.data.category))
       dispatch(triggerToast(`Category "${trimmedName}" added successfully!`, 'success'))
     } catch (error) {
