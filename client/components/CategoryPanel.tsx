@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { addCategory } from '../modules/categorySlice'
 
@@ -9,6 +9,13 @@ const CategoryPanel: React.FC = () => {
 
   const [newCategory, setNewCategory] = useState('')
   const [showCatInput, setShowCatInput] = useState(false)
+  const categoryInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (showCatInput) {
+      categoryInputRef.current?.focus()
+    }
+  }, [showCatInput])
 
   const { categorySpending, totalSpent } = useMemo(() => {
     const spending = allExpenses.reduce(
@@ -89,7 +96,7 @@ const CategoryPanel: React.FC = () => {
               placeholder="Category name..."
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              autoFocus
+              ref={categoryInputRef}
               className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all"
             />
             <div className="flex gap-2">

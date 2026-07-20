@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction, Dispatch } from '@reduxjs/toolkit'
 
 export interface ToastInfo {
   message: string
@@ -30,7 +30,7 @@ export const appSlice = createSlice({
 
 export const { setInitialized, setToast } = appSlice.actions
 
-export const triggerToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => (dispatch: any) => {
+export const triggerToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => (dispatch: Dispatch) => {
   dispatch(setToast({ message, type }))
   setTimeout(() => {
     dispatch(setToast(null))

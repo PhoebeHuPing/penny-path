@@ -3,6 +3,7 @@ static
 npm-debug.log
 bundle.*
 /dist
+.env
 
 # Promptkit repository
 promptkit
