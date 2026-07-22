@@ -1,64 +1,109 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import APIKeyHeader
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 from datetime import date
 from sqlalchemy.orm import Session
 
-from .db.database import SessionLocal, init_db, DBExpense, DBCategory
+from .db.database import SessionLocal, init_db, DBExpense, DBCategory, DBUser
+from .auth import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_db,
+)
 
 # --- Configuration ---
 ALLOWED_ORIGINS = os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
 ).split(",")
 
-API_KEY = os.getenv("API_KEY", "pennypath-dev-key")
-
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+DEFAULT_CATEGORIES = ["Food", "Transport", "Shopping", "Entertainment", "Medical", "Other"]
 
 
-# --- Lifespan (replaces deprecated @app.on_event) ---
+# --- Lifespan ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     init_db()
     yield
-    # Shutdown (nothing needed for now)
 
 
 app = FastAPI(lifespan=lifespan)
 
-# --- CORS middleware (restricted origins) ---
+# --- CORS middleware ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "X-API-Key"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
-# --- Auth dependency ---
-async def verify_api_key(key: str = Security(api_key_header)):
-    if key is None or key != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
-    return key
+# ============================================================
+# Pydantic Schemas
+# ============================================================
+
+# --- Auth ---
+class RegisterRequest(BaseModel):
+    email: str
+    username: str
+    password: str
 
 
-# --- DB dependency ---
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
-# --- Pydantic Schemas ---
+class AuthResponse(BaseModel):
+    token: str
+    user: "UserInfo"
+
+
+class UserInfo(BaseModel):
+    id: int
+    email: str
+    username: str
+
+    class Config:
+        from_attributes = True
+
+
+# --- Categories ---
+class Category(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryCreate(BaseModel):
+    name: str
+
+
+class CategoryListResponse(BaseModel):
+    categories: List[Category]
+
+
+class CategoriesResponse(BaseModel):
+    data: CategoryListResponse
+
+
+class CategorySingleResponse(BaseModel):
+    category: Category
+
+
+class CategoryCreateResponse(BaseModel):
+    data: CategorySingleResponse
+
+
+# --- Expenses ---
 class ExpenseBase(BaseModel):
     date: date
     location: str
@@ -75,34 +120,6 @@ class Expense(ExpenseBase):
 
     class Config:
         from_attributes = True
-
-
-class Category(BaseModel):
-    id: int
-    name: str
-
-    class Config:
-        from_attributes = True
-
-
-class CategoryCreate(BaseModel):
-    name: str
-
-
-class CategorySingleResponse(BaseModel):
-    category: Category
-
-
-class CategoryCreateResponse(BaseModel):
-    data: CategorySingleResponse
-
-
-class CategoryListResponse(BaseModel):
-    categories: List[Category]
-
-
-class CategoriesResponse(BaseModel):
-    data: CategoryListResponse
 
 
 class ExpenseListResponse(BaseModel):
@@ -122,13 +139,63 @@ class ExpenseCreateResponse(BaseModel):
     data: ExpenseSingleResponse
 
 
-# --- API Endpoints ---
+# ============================================================
+# Auth Endpoints
+# ============================================================
+
+@app.post("/api/auth/register", response_model=AuthResponse)
+async def register(body: RegisterRequest, db: Session = Depends(get_db)):
+    # Check existing email
+    if db.query(DBUser).filter(DBUser.email == body.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+    # Check existing username
+    if db.query(DBUser).filter(DBUser.username == body.username).first():
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    # Create user
+    user = DBUser(
+        email=body.email,
+        username=body.username,
+        hashed_password=hash_password(body.password),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    # Create default categories for the new user
+    for cat_name in DEFAULT_CATEGORIES:
+        db.add(DBCategory(name=cat_name, user_id=user.id))
+    db.commit()
+
+    token = create_access_token(user.id, user.username)
+    return {"token": token, "user": user}
+
+
+@app.post("/api/auth/login", response_model=AuthResponse)
+async def login(body: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(DBUser).filter(DBUser.email == body.email).first()
+    if not user or not verify_password(body.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    token = create_access_token(user.id, user.username)
+    return {"token": token, "user": user}
+
+
+@app.get("/api/auth/me", response_model=UserInfo)
+async def get_me(current_user: DBUser = Depends(get_current_user)):
+    return current_user
+
+
+# ============================================================
+# Category Endpoints (scoped to user)
+# ============================================================
+
 @app.get("/api/categories", response_model=CategoriesResponse)
 async def get_categories(
     db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key),
+    current_user: DBUser = Depends(get_current_user),
 ):
-    categories = db.query(DBCategory).all()
+    categories = db.query(DBCategory).filter(DBCategory.user_id == current_user.id).all()
     return {"data": {"categories": categories}}
 
 
@@ -136,30 +203,49 @@ async def get_categories(
 async def create_category(
     category: CategoryCreate,
     db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key),
+    current_user: DBUser = Depends(get_current_user),
 ):
-    db_category = db.query(DBCategory).filter(DBCategory.name == category.name).first()
-    if db_category:
+    # Check unique within user's categories
+    existing = (
+        db.query(DBCategory)
+        .filter(DBCategory.user_id == current_user.id, DBCategory.name == category.name)
+        .first()
+    )
+    if existing:
         raise HTTPException(status_code=400, detail="Category already exists")
 
-    db_category = DBCategory(name=category.name)
+    db_category = DBCategory(name=category.name, user_id=current_user.id)
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
     return {"data": {"category": db_category}}
 
 
+# ============================================================
+# Expense Endpoints (scoped to user)
+# ============================================================
+
 @app.get("/api/expenses", response_model=ExpensesResponse)
 async def get_expenses(
     skip: int = 0,
     limit: int = 20,
+    category_id: Optional[int] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
     db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key),
+    current_user: DBUser = Depends(get_current_user),
 ):
-    total_count = db.query(DBExpense).count()
-    expenses = (
-        db.query(DBExpense).order_by(DBExpense.date.desc()).offset(skip).limit(limit).all()
-    )
+    query = db.query(DBExpense).filter(DBExpense.user_id == current_user.id)
+
+    if category_id is not None:
+        query = query.filter(DBExpense.category_id == category_id)
+    if date_from is not None:
+        query = query.filter(DBExpense.date >= date_from)
+    if date_to is not None:
+        query = query.filter(DBExpense.date <= date_to)
+
+    total_count = query.count()
+    expenses = query.order_by(DBExpense.date.desc()).offset(skip).limit(limit).all()
     return {"data": {"expenses": expenses, "total_count": total_count}}
 
 
@@ -167,9 +253,18 @@ async def get_expenses(
 async def create_expense(
     expense: ExpenseCreate,
     db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key),
+    current_user: DBUser = Depends(get_current_user),
 ):
-    db_expense = DBExpense(**expense.model_dump())
+    # Verify category belongs to user
+    cat = (
+        db.query(DBCategory)
+        .filter(DBCategory.id == expense.category_id, DBCategory.user_id == current_user.id)
+        .first()
+    )
+    if not cat:
+        raise HTTPException(status_code=400, detail="Invalid category")
+
+    db_expense = DBExpense(**expense.model_dump(), user_id=current_user.id)
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
@@ -180,9 +275,13 @@ async def create_expense(
 async def delete_expense(
     expense_id: int,
     db: Session = Depends(get_db),
-    _: str = Depends(verify_api_key),
+    current_user: DBUser = Depends(get_current_user),
 ):
-    db_expense = db.query(DBExpense).filter(DBExpense.id == expense_id).first()
+    db_expense = (
+        db.query(DBExpense)
+        .filter(DBExpense.id == expense_id, DBExpense.user_id == current_user.id)
+        .first()
+    )
     if not db_expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     db.delete(db_expense)
