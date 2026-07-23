@@ -50,6 +50,11 @@ export const expenseSlice = createSlice({
         state.expenses.pop()
       }
     },
+    updateExpenseSuccess: (state, action: PayloadAction<Expense>) => {
+      const updated = action.payload
+      state.expenses = state.expenses.map((e) => (e.id === updated.id ? updated : e))
+      state.allExpenses = state.allExpenses.map((e) => (e.id === updated.id ? updated : e))
+    },
     deleteExpenseSuccess: (state, action: PayloadAction<number>) => {
       state.expenses = state.expenses.filter((e) => e.id !== action.payload)
       state.allExpenses = state.allExpenses.filter((e) => e.id !== action.payload)
@@ -64,7 +69,7 @@ export const expenseSlice = createSlice({
   },
 })
 
-export const { setExpenses, setAllExpenses, addExpenseSuccess, deleteExpenseSuccess, setLoading, setPage } =
+export const { setExpenses, setAllExpenses, addExpenseSuccess, updateExpenseSuccess, deleteExpenseSuccess, setLoading, setPage } =
   expenseSlice.actions
 
 // Async actions
@@ -113,6 +118,19 @@ export const removeExpense = (id: number) => async (dispatch: AppDispatch) => {
   } catch (error) {
     console.error('Failed to delete expense:', error)
     dispatch(triggerToast('Failed to delete transaction', 'error'))
+  }
+}
+
+export const updateExpense = (id: number, expense: Omit<Expense, 'id'>) => async (dispatch: AppDispatch) => {
+  try {
+    const res = await api.put(`/api/expenses/${id}`, expense)
+    dispatch(updateExpenseSuccess(res.data.data.expense))
+    dispatch(triggerToast('Transaction updated successfully!', 'success'))
+  } catch (error) {
+    console.error('Failed to update expense:', error)
+    const axiosError = error as AxiosError<{ detail?: string }>
+    const errorMsg = axiosError.response?.data?.detail || 'Failed to update transaction'
+    dispatch(triggerToast(errorMsg, 'error'))
   }
 }
 
