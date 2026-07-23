@@ -271,6 +271,39 @@ async def create_expense(
     return {"data": {"expense": db_expense}}
 
 
+@app.put("/api/expenses/{expense_id}", response_model=ExpenseCreateResponse)
+async def update_expense(
+    expense_id: int,
+    expense: ExpenseCreate,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    db_expense = (
+        db.query(DBExpense)
+        .filter(DBExpense.id == expense_id, DBExpense.user_id == current_user.id)
+        .first()
+    )
+    if not db_expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    # Verify category belongs to user
+    cat = (
+        db.query(DBCategory)
+        .filter(DBCategory.id == expense.category_id, DBCategory.user_id == current_user.id)
+        .first()
+    )
+    if not cat:
+        raise HTTPException(status_code=400, detail="Invalid category")
+
+    db_expense.date = expense.date
+    db_expense.location = expense.location
+    db_expense.amount = expense.amount
+    db_expense.category_id = expense.category_id
+    db.commit()
+    db.refresh(db_expense)
+    return {"data": {"expense": db_expense}}
+
+
 @app.delete("/api/expenses/{expense_id}")
 async def delete_expense(
     expense_id: int,
