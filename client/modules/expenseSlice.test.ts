@@ -7,6 +7,7 @@ const baseState = {
   loading: false,
   page: 1,
   totalCount: 0,
+  filters: {},
 }
 
 describe('expenseSlice', () => {
