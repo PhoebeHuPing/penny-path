@@ -14,12 +14,22 @@ export interface Expense {
   category_id: number
 }
 
+export interface ExpenseFilters {
+  category_id?: number | null
+  date_from?: string | null
+  date_to?: string | null
+  amount_min?: number | null
+  amount_max?: number | null
+  keyword?: string | null
+}
+
 interface ExpenseState {
   expenses: Expense[]
   allExpenses: Expense[] // for chart visualization
   loading: boolean
   page: number
   totalCount: number
+  filters: ExpenseFilters
 }
 
 const initialState: ExpenseState = {
@@ -28,6 +38,7 @@ const initialState: ExpenseState = {
   loading: false,
   page: 1,
   totalCount: 0,
+  filters: {},
 }
 
 export const expenseSlice = createSlice({
@@ -61,19 +72,47 @@ export const expenseSlice = createSlice({
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload
     },
+    setFilters: (state, action: PayloadAction<ExpenseFilters>) => {
+      state.filters = action.payload
+    },
+    clearFilters: (state) => {
+      state.filters = {}
+    },
   },
 })
 
-export const { setExpenses, setAllExpenses, addExpenseSuccess, deleteExpenseSuccess, setLoading, setPage } =
-  expenseSlice.actions
+export const {
+  setExpenses,
+  setAllExpenses,
+  addExpenseSuccess,
+  deleteExpenseSuccess,
+  setLoading,
+  setPage,
+  setFilters,
+  clearFilters,
+} = expenseSlice.actions
+
+// Build query string from filters
+const buildFilterParams = (filters: ExpenseFilters): string => {
+  const params = new URLSearchParams()
+  if (filters.category_id != null) params.append('category_id', String(filters.category_id))
+  if (filters.date_from) params.append('date_from', filters.date_from)
+  if (filters.date_to) params.append('date_to', filters.date_to)
+  if (filters.amount_min != null) params.append('amount_min', String(filters.amount_min))
+  if (filters.amount_max != null) params.append('amount_max', String(filters.amount_max))
+  if (filters.keyword) params.append('keyword', filters.keyword)
+  return params.toString()
+}
 
 // Async actions
-export const fetchExpenses = (page = 1) => async (dispatch: AppDispatch) => {
+export const fetchExpenses = (page = 1, filters?: ExpenseFilters) => async (dispatch: AppDispatch) => {
   dispatch(setLoading(true))
   dispatch(setPage(page))
   try {
     const skip = (page - 1) * PAGE_SIZE
-    const res = await api.get(`/api/expenses?skip=${skip}&limit=${PAGE_SIZE}`)
+    const filterParams = buildFilterParams(filters || {})
+    const separator = filterParams ? '&' : ''
+    const res = await api.get(`/api/expenses?skip=${skip}&limit=${PAGE_SIZE}${separator}${filterParams}`)
     dispatch(setExpenses({ expenses: res.data.data.expenses, total_count: res.data.data.total_count }))
   } catch (error) {
     console.error('Failed to fetch expenses:', error)

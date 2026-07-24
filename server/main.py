@@ -232,6 +232,9 @@ async def get_expenses(
     category_id: Optional[int] = None,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
+    amount_min: Optional[float] = None,
+    amount_max: Optional[float] = None,
+    keyword: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: DBUser = Depends(get_current_user),
 ):
@@ -243,6 +246,12 @@ async def get_expenses(
         query = query.filter(DBExpense.date >= date_from)
     if date_to is not None:
         query = query.filter(DBExpense.date <= date_to)
+    if amount_min is not None:
+        query = query.filter(DBExpense.amount >= amount_min)
+    if amount_max is not None:
+        query = query.filter(DBExpense.amount <= amount_max)
+    if keyword is not None and keyword.strip():
+        query = query.filter(DBExpense.location.ilike(f"%{keyword.strip()}%"))
 
     total_count = query.count()
     expenses = query.order_by(DBExpense.date.desc()).offset(skip).limit(limit).all()
