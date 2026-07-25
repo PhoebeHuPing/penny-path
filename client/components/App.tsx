@@ -9,6 +9,7 @@ import SpendingCharts from './SpendingCharts'
 import StatsPanel from './StatsPanel'
 import TransactionList from './TransactionList'
 import CategoryPanel from './CategoryPanel'
+import BudgetPanel from './BudgetPanel'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
 
@@ -93,6 +94,7 @@ function App() {
           </section>
 
           <CategoryPanel />
+          <BudgetPanel />
         </div>
       </main>
     </div>
