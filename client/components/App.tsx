@@ -1,12 +1,13 @@
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { fetchCategoryList } from '../modules/categorySlice'
 import { fetchExpenses, fetchAllExpensesForChart } from '../modules/expenseSlice'
+import { fetchDashboardSummary } from '../modules/dashboardSlice'
 import { fetchCurrentUser, logoutUser } from '../modules/authSlice'
 import { useEffect, useState } from 'react'
 import ExpenseForm from './ExpenseForm'
 import Toast from './Toast'
 import SpendingCharts from './SpendingCharts'
-import StatsPanel from './StatsPanel'
+import DashboardPanel from './DashboardPanel'
 import TransactionList from './TransactionList'
 import CategoryPanel from './CategoryPanel'
 import BudgetPanel from './BudgetPanel'
@@ -31,6 +32,7 @@ function App() {
       dispatch(fetchCategoryList())
       dispatch(fetchExpenses(1))
       dispatch(fetchAllExpensesForChart())
+      dispatch(fetchDashboardSummary())
     }
   }, [dispatch, token, user])
 
@@ -74,8 +76,8 @@ function App() {
         )}
       </header>
 
-      {/* Stats Summary Panel */}
-      <StatsPanel />
+      {/* Dashboard Summary Panel */}
+      <DashboardPanel />
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Panel: Transaction List + Charts */}

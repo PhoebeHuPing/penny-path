@@ -4,6 +4,7 @@ import authReducer from './modules/authSlice'
 import categoryReducer from './modules/categorySlice'
 import expenseReducer from './modules/expenseSlice'
 import budgetReducer from './modules/budgetSlice'
+import dashboardReducer from './modules/dashboardSlice'
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     category: categoryReducer,
     expenses: expenseReducer,
     budget: budgetReducer,
+    dashboard: dashboardReducer,
   },
 })
 

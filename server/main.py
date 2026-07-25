@@ -489,6 +489,142 @@ async def get_budget_status(
     return {"budgets": result}
 
 
+# ============================================================
+# Dashboard Endpoint
+# ============================================================
+
+class DashboardSummary(BaseModel):
+    current_month_total: float
+    daily_average: float
+    days_elapsed: int
+    days_in_month: int
+    last_month_total: float
+    mom_change_pct: Optional[float] = None  # month-over-month (环比)
+    same_month_last_year_total: float
+    yoy_change_pct: Optional[float] = None  # year-over-year (同比)
+    budget_total: Optional[float] = None
+    budget_remaining: Optional[float] = None
+    budget_usage_pct: Optional[float] = None
+
+
+@app.get("/api/dashboard/summary", response_model=DashboardSummary)
+async def get_dashboard_summary(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    today = date.today()
+    target_month = month or today.month
+    target_year = year or today.year
+
+    # Current month date range
+    _, last_day = monthrange(target_year, target_month)
+    month_start = date(target_year, target_month, 1)
+    month_end = date(target_year, target_month, last_day)
+
+    # Days elapsed in current month
+    if target_year == today.year and target_month == today.month:
+        days_elapsed = today.day
+    else:
+        days_elapsed = last_day
+
+    # Current month total
+    current_total = (
+        db.query(func.coalesce(func.sum(DBExpense.amount), 0))
+        .filter(
+            DBExpense.user_id == current_user.id,
+            DBExpense.date >= month_start,
+            DBExpense.date <= month_end,
+        )
+        .scalar()
+    )
+    current_total = float(current_total)
+
+    # Daily average
+    daily_average = current_total / days_elapsed if days_elapsed > 0 else 0.0
+
+    # Last month total (环比)
+    prev_month = target_month - 1
+    prev_year = target_year
+    if prev_month < 1:
+        prev_month = 12
+        prev_year -= 1
+    _, prev_last_day = monthrange(prev_year, prev_month)
+    prev_start = date(prev_year, prev_month, 1)
+    prev_end = date(prev_year, prev_month, prev_last_day)
+
+    last_month_total = float(
+        db.query(func.coalesce(func.sum(DBExpense.amount), 0))
+        .filter(
+            DBExpense.user_id == current_user.id,
+            DBExpense.date >= prev_start,
+            DBExpense.date <= prev_end,
+        )
+        .scalar()
+    )
+
+    mom_change_pct = None
+    if last_month_total > 0:
+        mom_change_pct = round((current_total - last_month_total) / last_month_total * 100, 1)
+
+    # Same month last year (同比)
+    ly_year = target_year - 1
+    _, ly_last_day = monthrange(ly_year, target_month)
+    ly_start = date(ly_year, target_month, 1)
+    ly_end = date(ly_year, target_month, ly_last_day)
+
+    same_month_last_year_total = float(
+        db.query(func.coalesce(func.sum(DBExpense.amount), 0))
+        .filter(
+            DBExpense.user_id == current_user.id,
+            DBExpense.date >= ly_start,
+            DBExpense.date <= ly_end,
+        )
+        .scalar()
+    )
+
+    yoy_change_pct = None
+    if same_month_last_year_total > 0:
+        yoy_change_pct = round(
+            (current_total - same_month_last_year_total) / same_month_last_year_total * 100, 1
+        )
+
+    # Budget remaining (overall budget for this month, category_id IS NULL)
+    overall_budget = (
+        db.query(DBBudget)
+        .filter(
+            DBBudget.user_id == current_user.id,
+            DBBudget.month == target_month,
+            DBBudget.year == target_year,
+            DBBudget.category_id.is_(None),
+        )
+        .first()
+    )
+
+    budget_total = None
+    budget_remaining = None
+    budget_usage_pct = None
+    if overall_budget:
+        budget_total = overall_budget.amount
+        budget_remaining = overall_budget.amount - current_total
+        budget_usage_pct = round(current_total / overall_budget.amount * 100, 1) if overall_budget.amount > 0 else 0.0
+
+    return DashboardSummary(
+        current_month_total=current_total,
+        daily_average=round(daily_average, 2),
+        days_elapsed=days_elapsed,
+        days_in_month=last_day,
+        last_month_total=last_month_total,
+        mom_change_pct=mom_change_pct,
+        same_month_last_year_total=same_month_last_year_total,
+        yoy_change_pct=yoy_change_pct,
+        budget_total=budget_total,
+        budget_remaining=budget_remaining,
+        budget_usage_pct=budget_usage_pct,
+    )
+
+
 @app.get("/")
 async def root():
     return {"message": "PennyPath Backend API Running"}
