@@ -26,6 +26,7 @@ class DBUser(Base):
 
     expenses = relationship("DBExpense", back_populates="owner")
     categories = relationship("DBCategory", back_populates="owner")
+    budgets = relationship("DBBudget", back_populates="owner")
 
     def __repr__(self):
         return f"<DBUser(id={self.id}, username='{self.username}')>"
@@ -39,9 +40,26 @@ class DBCategory(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     owner = relationship("DBUser", back_populates="categories")
     expenses = relationship("DBExpense", back_populates="category")
+    budgets = relationship("DBBudget", back_populates="category")
 
     def __repr__(self):
         return f"<DBCategory(id={self.id}, name='{self.name}')>"
+
+
+class DBBudget(Base):
+    __tablename__ = "budgets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    amount = Column(Float, nullable=False)
+    month = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False)
+    owner = relationship("DBUser", back_populates="budgets")
+    category = relationship("DBCategory", back_populates="budgets")
+
+    def __repr__(self):
+        return f"<DBBudget(id={self.id}, amount={self.amount}, month={self.month}/{self.year})>"
 
 
 class DBExpense(Base):
