@@ -25,6 +25,7 @@ class DBUser(Base):
     hashed_password = Column(String, nullable=False)
 
     expenses = relationship("DBExpense", back_populates="owner")
+    incomes = relationship("DBIncome", back_populates="owner")
     categories = relationship("DBCategory", back_populates="owner")
     budgets = relationship("DBBudget", back_populates="owner")
 
@@ -76,6 +77,20 @@ class DBExpense(Base):
 
     def __repr__(self):
         return f"<DBExpense(id={self.id}, amount={self.amount}, date={self.date})>"
+
+
+class DBIncome(Base):
+    __tablename__ = "incomes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, default=date.today)
+    source = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    owner = relationship("DBUser", back_populates="incomes")
+
+    def __repr__(self):
+        return f"<DBIncome(id={self.id}, amount={self.amount}, source='{self.source}')>"
 
 
 def init_db():

@@ -14,6 +14,8 @@ export interface DashboardSummary {
   budget_total: number | null
   budget_remaining: number | null
   budget_usage_pct: number | null
+  income_total: number
+  net_balance: number
 }
 
 interface DashboardState {
