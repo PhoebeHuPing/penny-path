@@ -10,7 +10,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from .db.database import SessionLocal, init_db, DBExpense, DBCategory, DBUser, DBBudget
+from .db.database import SessionLocal, init_db, DBExpense, DBCategory, DBUser, DBBudget, DBIncome
 from .auth import (
     hash_password,
     verify_password,
@@ -139,6 +139,41 @@ class ExpenseSingleResponse(BaseModel):
 
 class ExpenseCreateResponse(BaseModel):
     data: ExpenseSingleResponse
+
+
+# --- Incomes ---
+class IncomeBase(BaseModel):
+    date: date
+    source: str
+    amount: float
+
+
+class IncomeCreate(IncomeBase):
+    pass
+
+
+class Income(IncomeBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class IncomeListResponse(BaseModel):
+    incomes: List[Income]
+    total_count: int
+
+
+class IncomesResponse(BaseModel):
+    data: IncomeListResponse
+
+
+class IncomeSingleResponse(BaseModel):
+    income: Income
+
+
+class IncomeCreateResponse(BaseModel):
+    data: IncomeSingleResponse
 
 
 # ============================================================
@@ -298,6 +333,65 @@ async def delete_expense(
     db.delete(db_expense)
     db.commit()
     return {"message": "Expense deleted successfully"}
+
+
+# ============================================================
+# Income Endpoints (scoped to user)
+# ============================================================
+
+@app.get("/api/incomes", response_model=IncomesResponse)
+async def get_incomes(
+    skip: int = 0,
+    limit: int = 20,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    query = db.query(DBIncome).filter(DBIncome.user_id == current_user.id)
+
+    if date_from is not None:
+        query = query.filter(DBIncome.date >= date_from)
+    if date_to is not None:
+        query = query.filter(DBIncome.date <= date_to)
+
+    total_count = query.count()
+    incomes = query.order_by(DBIncome.date.desc()).offset(skip).limit(limit).all()
+    return {"data": {"incomes": incomes, "total_count": total_count}}
+
+
+@app.post("/api/incomes", response_model=IncomeCreateResponse)
+async def create_income(
+    income: IncomeCreate,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    if income.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    db_income = DBIncome(**income.model_dump(), user_id=current_user.id)
+    db.add(db_income)
+    db.commit()
+    db.refresh(db_income)
+    return {"data": {"income": db_income}}
+
+
+@app.delete("/api/incomes/{income_id}")
+async def delete_income(
+    income_id: int,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    db_income = (
+        db.query(DBIncome)
+        .filter(DBIncome.id == income_id, DBIncome.user_id == current_user.id)
+        .first()
+    )
+    if not db_income:
+        raise HTTPException(status_code=404, detail="Income not found")
+    db.delete(db_income)
+    db.commit()
+    return {"message": "Income deleted successfully"}
 
 
 # --- Budgets ---
@@ -505,6 +599,8 @@ class DashboardSummary(BaseModel):
     budget_total: Optional[float] = None
     budget_remaining: Optional[float] = None
     budget_usage_pct: Optional[float] = None
+    income_total: float = 0.0
+    net_balance: float = 0.0
 
 
 @app.get("/api/dashboard/summary", response_model=DashboardSummary)
@@ -610,6 +706,20 @@ async def get_dashboard_summary(
         budget_remaining = overall_budget.amount - current_total
         budget_usage_pct = round(current_total / overall_budget.amount * 100, 1) if overall_budget.amount > 0 else 0.0
 
+    # Income total for current month
+    income_total = float(
+        db.query(func.coalesce(func.sum(DBIncome.amount), 0))
+        .filter(
+            DBIncome.user_id == current_user.id,
+            DBIncome.date >= month_start,
+            DBIncome.date <= month_end,
+        )
+        .scalar()
+    )
+
+    # Net balance = income - expenses
+    net_balance = income_total - current_total
+
     return DashboardSummary(
         current_month_total=current_total,
         daily_average=round(daily_average, 2),
@@ -622,6 +732,8 @@ async def get_dashboard_summary(
         budget_total=budget_total,
         budget_remaining=budget_remaining,
         budget_usage_pct=budget_usage_pct,
+        income_total=income_total,
+        net_balance=net_balance,
     )
 
 

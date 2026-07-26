@@ -1,10 +1,12 @@
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { fetchCategoryList } from '../modules/categorySlice'
 import { fetchExpenses, fetchAllExpensesForChart } from '../modules/expenseSlice'
+import { fetchIncomes } from '../modules/incomeSlice'
 import { fetchDashboardSummary } from '../modules/dashboardSlice'
 import { fetchCurrentUser, logoutUser } from '../modules/authSlice'
 import { useEffect, useState } from 'react'
 import ExpenseForm from './ExpenseForm'
+import IncomeForm from './IncomeForm'
 import Toast from './Toast'
 import SpendingCharts from './SpendingCharts'
 import DashboardPanel from './DashboardPanel'
@@ -18,6 +20,7 @@ function App() {
   const dispatch = useAppDispatch()
   const { token, user } = useAppSelector((state) => state.auth)
   const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
 
   // On mount, try to fetch current user if we have a token
   useEffect(() => {
@@ -32,6 +35,7 @@ function App() {
       dispatch(fetchCategoryList())
       dispatch(fetchExpenses(1))
       dispatch(fetchAllExpensesForChart())
+      dispatch(fetchIncomes(1))
       dispatch(fetchDashboardSummary())
     }
   }, [dispatch, token, user])
@@ -89,10 +93,31 @@ function App() {
         {/* Right Panel: Add Form and Categories */}
         <div className="space-y-8">
           <section className="expense-card bg-slate-900 border-none shadow-xl shadow-slate-200">
-            <h2 className="text-xl font-bold text-white mb-6">
-              Add Transaction
-            </h2>
-            <ExpenseForm />
+            {/* Tab switcher */}
+            <div className="flex mb-6 bg-slate-800 rounded-xl p-1">
+              <button
+                onClick={() => setActiveTab('expense')}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                  activeTab === 'expense'
+                    ? 'bg-brand text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Expense
+              </button>
+              <button
+                onClick={() => setActiveTab('income')}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                  activeTab === 'income'
+                    ? 'bg-green-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Income
+              </button>
+            </div>
+
+            {activeTab === 'expense' ? <ExpenseForm /> : <IncomeForm />}
           </section>
 
           <CategoryPanel />

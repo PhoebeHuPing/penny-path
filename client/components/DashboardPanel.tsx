@@ -47,11 +47,11 @@ const DashboardPanel: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-      {/* Monthly Total */}
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      {/* Monthly Total (Expenses) */}
       <div className="bg-gradient-to-br from-brand/5 to-brand/10 p-5 rounded-2xl border border-brand/10">
         <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
-          This Month
+          Expenses
         </p>
         <p className="text-2xl font-black text-slate-800">
           {formatCurrency(summary.current_month_total)}
@@ -59,6 +59,28 @@ const DashboardPanel: React.FC = () => {
         <p className="text-xs text-slate-400 mt-1">
           Day {summary.days_elapsed}/{summary.days_in_month}
         </p>
+      </div>
+
+      {/* Income Total */}
+      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-5 rounded-2xl border border-emerald-100">
+        <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
+          Income
+        </p>
+        <p className="text-2xl font-black text-emerald-700">
+          {formatCurrency(summary.income_total)}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">this month</p>
+      </div>
+
+      {/* Net Balance */}
+      <div className={`p-5 rounded-2xl border ${summary.net_balance >= 0 ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-100' : 'bg-gradient-to-br from-red-50 to-red-100 border-red-100'}`}>
+        <p className="text-xs font-black uppercase tracking-wider text-slate-500 mb-1">
+          Net Balance
+        </p>
+        <p className={`text-2xl font-black ${summary.net_balance >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+          {summary.net_balance >= 0 ? '+' : ''}{formatCurrency(summary.net_balance)}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">income − expenses</p>
       </div>
 
       {/* Daily Average */}
@@ -82,19 +104,6 @@ const DashboardPanel: React.FC = () => {
         </p>
         <p className="text-xs text-slate-400 mt-1">
           {formatCurrency(summary.last_month_total)} prev
-        </p>
-      </div>
-
-      {/* Year-over-Year (同比) */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-        <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">
-          vs Last Year
-        </p>
-        <p className={`text-2xl font-black ${getPctColor(summary.yoy_change_pct)}`}>
-          {formatPct(summary.yoy_change_pct)}
-        </p>
-        <p className="text-xs text-slate-400 mt-1">
-          {formatCurrency(summary.same_month_last_year_total)} prev
         </p>
       </div>
 
