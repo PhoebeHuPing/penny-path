@@ -13,6 +13,7 @@ import DashboardPanel from './DashboardPanel'
 import TransactionList from './TransactionList'
 import CategoryPanel from './CategoryPanel'
 import BudgetPanel from './BudgetPanel'
+import ExportPanel from './ExportPanel'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
 
@@ -122,6 +123,7 @@ function App() {
 
           <CategoryPanel />
           <BudgetPanel />
+          <ExportPanel />
         </div>
       </main>
     </div>

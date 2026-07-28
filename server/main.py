@@ -737,6 +737,219 @@ async def get_dashboard_summary(
     )
 
 
+# ============================================================
+# Export Endpoints (CSV / PDF)
+# ============================================================
+
+from fastapi.responses import StreamingResponse
+import csv
+import io
+
+
+@app.get("/api/export/csv")
+async def export_csv(
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    """Export user's expenses and incomes as a CSV file."""
+    # Query expenses
+    expense_query = db.query(DBExpense).filter(DBExpense.user_id == current_user.id)
+    if date_from:
+        expense_query = expense_query.filter(DBExpense.date >= date_from)
+    if date_to:
+        expense_query = expense_query.filter(DBExpense.date <= date_to)
+    expenses = expense_query.order_by(DBExpense.date.desc()).all()
+
+    # Query incomes
+    income_query = db.query(DBIncome).filter(DBIncome.user_id == current_user.id)
+    if date_from:
+        income_query = income_query.filter(DBIncome.date >= date_from)
+    if date_to:
+        income_query = income_query.filter(DBIncome.date <= date_to)
+    incomes = income_query.order_by(DBIncome.date.desc()).all()
+
+    # Build category lookup
+    categories = db.query(DBCategory).filter(DBCategory.user_id == current_user.id).all()
+    cat_map = {c.id: c.name for c in categories}
+
+    # Generate CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Expenses section
+    writer.writerow(["=== Expenses ==="])
+    writer.writerow(["Date", "Location", "Category", "Amount"])
+    for e in expenses:
+        writer.writerow([
+            e.date.isoformat(),
+            e.location,
+            cat_map.get(e.category_id, "Unknown"),
+            f"{e.amount:.2f}",
+        ])
+
+    writer.writerow([])
+
+    # Incomes section
+    writer.writerow(["=== Incomes ==="])
+    writer.writerow(["Date", "Source", "Amount"])
+    for i in incomes:
+        writer.writerow([i.date.isoformat(), i.source, f"{i.amount:.2f}"])
+
+    writer.writerow([])
+
+    # Summary
+    total_expenses = sum(e.amount for e in expenses)
+    total_incomes = sum(i.amount for i in incomes)
+    writer.writerow(["=== Summary ==="])
+    writer.writerow(["Total Expenses", f"{total_expenses:.2f}"])
+    writer.writerow(["Total Incomes", f"{total_incomes:.2f}"])
+    writer.writerow(["Net Balance", f"{total_incomes - total_expenses:.2f}"])
+
+    output.seek(0)
+    filename = f"pennypath_export_{date.today().isoformat()}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/export/pdf")
+async def export_pdf(
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    """Export user's expenses and incomes as a PDF report."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+
+    # Query expenses
+    expense_query = db.query(DBExpense).filter(DBExpense.user_id == current_user.id)
+    if date_from:
+        expense_query = expense_query.filter(DBExpense.date >= date_from)
+    if date_to:
+        expense_query = expense_query.filter(DBExpense.date <= date_to)
+    expenses = expense_query.order_by(DBExpense.date.desc()).all()
+
+    # Query incomes
+    income_query = db.query(DBIncome).filter(DBIncome.user_id == current_user.id)
+    if date_from:
+        income_query = income_query.filter(DBIncome.date >= date_from)
+    if date_to:
+        income_query = income_query.filter(DBIncome.date <= date_to)
+    incomes = income_query.order_by(DBIncome.date.desc()).all()
+
+    # Build category lookup
+    categories = db.query(DBCategory).filter(DBCategory.user_id == current_user.id).all()
+    cat_map = {c.id: c.name for c in categories}
+
+    # Generate PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=20 * mm, bottomMargin=20 * mm)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Title
+    elements.append(Paragraph("PennyPath Financial Report", styles["Title"]))
+    date_range_text = ""
+    if date_from and date_to:
+        date_range_text = f"Period: {date_from.isoformat()} to {date_to.isoformat()}"
+    elif date_from:
+        date_range_text = f"From: {date_from.isoformat()}"
+    elif date_to:
+        date_range_text = f"Up to: {date_to.isoformat()}"
+    else:
+        date_range_text = "All records"
+    elements.append(Paragraph(date_range_text, styles["Normal"]))
+    elements.append(Spacer(1, 10 * mm))
+
+    # Summary section
+    total_expenses = sum(e.amount for e in expenses)
+    total_incomes = sum(i.amount for i in incomes)
+    net_balance = total_incomes - total_expenses
+
+    summary_data = [
+        ["Total Income", f"${total_incomes:,.2f}"],
+        ["Total Expenses", f"${total_expenses:,.2f}"],
+        ["Net Balance", f"${net_balance:,.2f}"],
+    ]
+    elements.append(Paragraph("Summary", styles["Heading2"]))
+    summary_table = Table(summary_data, colWidths=[80 * mm, 60 * mm])
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 8 * mm))
+
+    # Expenses table
+    if expenses:
+        elements.append(Paragraph("Expenses", styles["Heading2"]))
+        expense_data = [["Date", "Location", "Category", "Amount"]]
+        for e in expenses:
+            expense_data.append([
+                e.date.isoformat(),
+                e.location or "",
+                cat_map.get(e.category_id, "Unknown"),
+                f"${e.amount:,.2f}",
+            ])
+        expense_table = Table(expense_data, colWidths=[30 * mm, 50 * mm, 40 * mm, 30 * mm])
+        expense_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("PADDING", (0, 0), (-1, -1), 5),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.whitesmoke]),
+        ]))
+        elements.append(expense_table)
+        elements.append(Spacer(1, 8 * mm))
+
+    # Incomes table
+    if incomes:
+        elements.append(Paragraph("Incomes", styles["Heading2"]))
+        income_data = [["Date", "Source", "Amount"]]
+        for i in incomes:
+            income_data.append([
+                i.date.isoformat(),
+                i.source,
+                f"${i.amount:,.2f}",
+            ])
+        income_table = Table(income_data, colWidths=[40 * mm, 70 * mm, 40 * mm])
+        income_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#166534")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("PADDING", (0, 0), (-1, -1), 5),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.whitesmoke]),
+        ]))
+        elements.append(income_table)
+
+    doc.build(elements)
+    buffer.seek(0)
+    filename = f"pennypath_report_{date.today().isoformat()}.pdf"
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @app.get("/")
 async def root():
     return {"message": "PennyPath Backend API Running"}
