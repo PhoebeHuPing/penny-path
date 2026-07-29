@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { addCategory } from '../modules/categorySlice'
+import { formatCurrency } from '../utils/currency'
 
 const CategoryPanel: React.FC = () => {
   const { categoryList } = useAppSelector((state) => state.category)
@@ -55,10 +56,7 @@ const CategoryPanel: React.FC = () => {
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-slate-600">{item.name}</span>
                 <span className="text-slate-500">
-                  $
-                  {amount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}{' '}
+                  {formatCurrency(amount)}{' '}
                   ({percent.toFixed(0)}%)
                 </span>
               </div>

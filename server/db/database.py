@@ -23,6 +23,9 @@ class DBUser(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    avatar_url = Column(String, nullable=True, default=None)
+    display_name = Column(String, nullable=True, default=None)
+    currency = Column(String, nullable=False, default="USD")
 
     expenses = relationship("DBExpense", back_populates="owner")
     incomes = relationship("DBIncome", back_populates="owner")

@@ -71,9 +71,24 @@ class UserInfo(BaseModel):
     id: int
     email: str
     username: str
+    avatar_url: Optional[str] = None
+    display_name: Optional[str] = None
+    currency: str = "USD"
 
     class Config:
         from_attributes = True
+
+
+# --- User Settings ---
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class UpdateProfileRequest(BaseModel):
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    currency: Optional[str] = None
 
 
 # --- Categories ---
@@ -220,6 +235,70 @@ async def login(body: LoginRequest, db: Session = Depends(get_db)):
 
 @app.get("/api/auth/me", response_model=UserInfo)
 async def get_me(current_user: DBUser = Depends(get_current_user)):
+    return current_user
+
+
+# ============================================================
+# User Settings Endpoints
+# ============================================================
+
+SUPPORTED_CURRENCIES = [
+    "USD", "EUR", "GBP", "JPY", "CNY", "AUD", "CAD", "CHF",
+    "NZD", "SGD", "HKD", "KRW", "TWD", "INR", "BRL", "MXN",
+]
+
+
+@app.put("/api/user/password")
+async def change_password(
+    body: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    # Verify current password
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    # Validate new password
+    if len(body.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    # Update password
+    current_user.hashed_password = hash_password(body.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}
+
+
+@app.put("/api/user/profile", response_model=UserInfo)
+async def update_profile(
+    body: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user),
+):
+    # Update display_name if provided
+    if body.display_name is not None:
+        if len(body.display_name.strip()) == 0:
+            current_user.display_name = None
+        else:
+            current_user.display_name = body.display_name.strip()
+
+    # Update avatar_url if provided
+    if body.avatar_url is not None:
+        if len(body.avatar_url.strip()) == 0:
+            current_user.avatar_url = None
+        else:
+            current_user.avatar_url = body.avatar_url.strip()
+
+    # Update currency if provided
+    if body.currency is not None:
+        if body.currency.upper() not in SUPPORTED_CURRENCIES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported currency. Supported: {', '.join(SUPPORTED_CURRENCIES)}",
+            )
+        current_user.currency = body.currency.upper()
+
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 
