@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useAppSelector } from '../hooks'
+import { formatCurrency } from '../utils/currency'
 
 const StatsPanel: React.FC = () => {
   const { allExpenses } = useAppSelector((state) => state.expenses)
@@ -41,7 +42,7 @@ const StatsPanel: React.FC = () => {
           Total Spent
         </p>
         <p className="text-3xl font-black text-slate-800">
-          ${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          {formatCurrency(totalSpent)}
         </p>
       </div>
       <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -49,10 +50,7 @@ const StatsPanel: React.FC = () => {
           Average / Transaction
         </p>
         <p className="text-3xl font-black text-slate-800">
-          $
-          {averageSpend.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
+          {formatCurrency(averageSpend)}
         </p>
       </div>
       <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">

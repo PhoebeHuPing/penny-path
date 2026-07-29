@@ -12,6 +12,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useAppSelector } from '../hooks'
+import { formatCurrency } from '../utils/currency'
 
 const CHART_COLORS = [
   '#4a90e2',
@@ -59,10 +60,7 @@ const PieTooltip = ({ active, payload }: PieTooltipProps) => {
       <div style={CustomTooltipStyle}>
         <p className="font-bold mb-0.5">{name}</p>
         <p>
-          $
-          {(value as number).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
+          {formatCurrency(value as number)}
         </p>
       </div>
     )
@@ -77,10 +75,7 @@ const LineTooltip = ({ active, payload, label }: LineTooltipProps) => {
         <p className="font-bold mb-1">{label}</p>
         {payload.map((entry) => (
           <p key={entry.name} style={{ color: entry.color }}>
-            {entry.name}: $
-            {(entry.value as number).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}
+            {entry.name}: {formatCurrency(entry.value as number)}
           </p>
         ))}
       </div>
@@ -184,7 +179,7 @@ const SpendingCharts: React.FC = () => {
       </div>
 
       {activeTab === 'pie' ? (
-        <div role="img" aria-label={`Pie chart showing spending by category: ${pieData.map(d => `${d.name} $${d.value.toFixed(2)}`).join(', ')}`}>
+        <div role="img" aria-label={`Pie chart showing spending by category: ${pieData.map(d => `${d.name} ${formatCurrency(d.value)}`).join(', ')}`}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie

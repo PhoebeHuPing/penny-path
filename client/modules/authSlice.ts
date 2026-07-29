@@ -8,6 +8,9 @@ export interface User {
   id: number
   email: string
   username: string
+  avatar_url?: string | null
+  display_name?: string | null
+  currency: string
 }
 
 interface AuthState {

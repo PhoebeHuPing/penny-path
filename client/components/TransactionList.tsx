@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { fetchExpenses, removeExpense, PAGE_SIZE } from '../modules/expenseSlice'
 import SearchFilter from './SearchFilter'
+import { formatCurrency } from '../utils/currency'
 
 const TransactionList: React.FC = () => {
   const { expenses, loading, page, totalCount, filters } = useAppSelector(
@@ -75,16 +76,13 @@ const TransactionList: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-lg font-black text-slate-800">
-                      $
-                      {exp.amount.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                      {formatCurrency(exp.amount)}
                     </span>
                     <button
                       onClick={() => dispatch(removeExpense(exp.id))}
                       className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all cursor-pointer"
                       title="Delete transaction"
-                      aria-label={`Delete transaction at ${exp.location} for $${exp.amount.toFixed(2)}`}
+                      aria-label={`Delete transaction at ${exp.location} for ${formatCurrency(exp.amount)}`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

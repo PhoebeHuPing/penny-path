@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { fetchDashboardSummary } from '../modules/dashboardSlice'
+import { formatCurrency } from '../utils/currency'
 
 const DashboardPanel: React.FC = () => {
   const dispatch = useAppDispatch()
@@ -22,9 +23,6 @@ const DashboardPanel: React.FC = () => {
       </div>
     )
   }
-
-  const formatCurrency = (val: number) =>
-    `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const formatPct = (val: number | null) => {
     if (val === null) return 'N/A'

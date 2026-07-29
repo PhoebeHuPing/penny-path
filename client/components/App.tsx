@@ -16,12 +16,14 @@ import BudgetPanel from './BudgetPanel'
 import ExportPanel from './ExportPanel'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
+import SettingsPage from './SettingsPage'
 
 function App() {
   const dispatch = useAppDispatch()
   const { token, user } = useAppSelector((state) => state.auth)
   const [authView, setAuthView] = useState<'login' | 'register'>('login')
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
+  const [page, setPage] = useState<'dashboard' | 'settings'>('dashboard')
 
   // On mount, try to fetch current user if we have a token
   useEffect(() => {
@@ -55,6 +57,16 @@ function App() {
     )
   }
 
+  // Settings page
+  if (page === 'settings') {
+    return (
+      <>
+        <Toast />
+        <SettingsPage onBack={() => setPage('dashboard')} />
+      </>
+    )
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <Toast />
@@ -69,8 +81,15 @@ function App() {
         {user && (
           <div className="absolute top-0 right-0 flex items-center gap-3">
             <span className="text-sm text-slate-600">
-              Hi, <span className="font-semibold">{user.username}</span>
+              Hi, <span className="font-semibold">{user.display_name || user.username}</span>
             </span>
+            <button
+              onClick={() => setPage('settings')}
+              className="text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium"
+              aria-label="Open settings"
+            >
+              ⚙ Settings
+            </button>
             <button
               onClick={() => dispatch(logoutUser())}
               className="text-sm px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition font-medium"
