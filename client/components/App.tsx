@@ -17,11 +17,13 @@ import ExportPanel from './ExportPanel'
 import LoginPage from './LoginPage'
 import RegisterPage from './RegisterPage'
 import SettingsPage from './SettingsPage'
+import ForgotPasswordPage from './ForgotPasswordPage'
+import ResetPasswordPage from './ResetPasswordPage'
 
 function App() {
   const dispatch = useAppDispatch()
   const { token, user } = useAppSelector((state) => state.auth)
-  const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login')
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
   const [page, setPage] = useState<'dashboard' | 'settings'>('dashboard')
 
@@ -31,6 +33,15 @@ function App() {
       dispatch(fetchCurrentUser())
     }
   }, [dispatch, token])
+
+  // Check for reset token in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const resetToken = params.get('token')
+    if (resetToken && window.location.pathname.includes('reset-password')) {
+      setAuthView('reset-password')
+    }
+  }, [])
 
   // Once authenticated, fetch data
   useEffect(() => {
@@ -43,16 +54,48 @@ function App() {
     }
   }, [dispatch, token, user])
 
-  // Not authenticated - show login/register
+  // Not authenticated - show login/register/forgot/reset
   if (!token) {
+    const renderAuthView = () => {
+      switch (authView) {
+        case 'forgot-password':
+          return (
+            <ForgotPasswordPage
+              onSwitchToLogin={() => setAuthView('login')}
+            />
+          )
+        case 'reset-password': {
+          const params = new URLSearchParams(window.location.search)
+          const resetToken = params.get('token') || ''
+          return (
+            <ResetPasswordPage
+              token={resetToken}
+              onSwitchToLogin={() => {
+                // Clear URL params when going back to login
+                window.history.replaceState({}, '', '/')
+                setAuthView('login')
+              }}
+            />
+          )
+        }
+        case 'register':
+          return (
+            <RegisterPage onSwitchToLogin={() => setAuthView('login')} />
+          )
+        default:
+          return (
+            <LoginPage
+              onSwitchToRegister={() => setAuthView('register')}
+              onSwitchToForgotPassword={() => setAuthView('forgot-password')}
+            />
+          )
+      }
+    }
+
     return (
       <>
         <Toast />
-        {authView === 'login' ? (
-          <LoginPage onSwitchToRegister={() => setAuthView('register')} />
-        ) : (
-          <RegisterPage onSwitchToLogin={() => setAuthView('login')} />
-        )}
+        {renderAuthView()}
       </>
     )
   }
