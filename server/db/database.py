@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
 import os
 from dotenv import load_dotenv
-from datetime import date
+from datetime import date, datetime
 
 load_dotenv()
 
@@ -94,6 +94,21 @@ class DBIncome(Base):
 
     def __repr__(self):
         return f"<DBIncome(id={self.id}, amount={self.amount}, source='{self.source}')>"
+
+
+class DBPasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Integer, default=0)  # 0 = unused, 1 = used
+
+    user = relationship("DBUser")
+
+    def __repr__(self):
+        return f"<DBPasswordResetToken(id={self.id}, user_id={self.user_id})>"
 
 
 def init_db():

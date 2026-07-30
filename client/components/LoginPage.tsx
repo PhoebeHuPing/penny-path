@@ -4,9 +4,10 @@ import { loginUser } from '../modules/authSlice'
 
 interface LoginPageProps {
   onSwitchToRegister: () => void
+  onSwitchToForgotPassword: () => void
 }
 
-function LoginPage({ onSwitchToRegister }: LoginPageProps) {
+function LoginPage({ onSwitchToRegister, onSwitchToForgotPassword }: LoginPageProps) {
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.auth)
 
@@ -72,6 +73,15 @@ function LoginPage({ onSwitchToRegister }: LoginPageProps) {
               className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-800 focus:border-transparent outline-none transition"
               placeholder="••••••••"
             />
+            <div className="mt-1 text-right">
+              <button
+                type="button"
+                onClick={onSwitchToForgotPassword}
+                className="text-xs text-slate-500 hover:text-slate-800 hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
 
           <button

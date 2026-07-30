@@ -1,4 +1,6 @@
 import os
+import secrets
+import logging
 from contextlib import asynccontextmanager
 from calendar import monthrange
 
@@ -6,11 +8,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from .db.database import SessionLocal, init_db, DBExpense, DBCategory, DBUser, DBBudget, DBIncome
+from .db.database import SessionLocal, init_db, DBExpense, DBCategory, DBUser, DBBudget, DBIncome, DBPasswordResetToken
 from .auth import (
     hash_password,
     verify_password,
@@ -60,6 +62,15 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 
 class AuthResponse(BaseModel):
@@ -236,6 +247,100 @@ async def login(body: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/api/auth/me", response_model=UserInfo)
 async def get_me(current_user: DBUser = Depends(get_current_user)):
     return current_user
+
+
+# --- Password Reset ---
+logger = logging.getLogger(__name__)
+
+RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES", "30"))
+
+
+@app.post("/api/auth/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """
+    Request a password reset. Always returns success to prevent email enumeration.
+    In production, this would send an email with the reset link.
+    For development, the token is logged to the console.
+    """
+    user = db.query(DBUser).filter(DBUser.email == body.email).first()
+
+    if user:
+        # Generate a secure token
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+
+        # Invalidate any existing unused tokens for this user
+        db.query(DBPasswordResetToken).filter(
+            DBPasswordResetToken.user_id == user.id,
+            DBPasswordResetToken.used == 0,
+        ).update({"used": 1})
+
+        # Create new reset token
+        reset_token = DBPasswordResetToken(
+            user_id=user.id,
+            token=token,
+            expires_at=expires_at,
+        )
+        db.add(reset_token)
+        db.commit()
+
+        # In production, send email here. For dev, log the token.
+        reset_link = f"http://localhost:5173/reset-password?token={token}"
+        logger.info(f"Password reset requested for {user.email}. Reset link: {reset_link}")
+        print(f"\n{'='*60}")
+        print(f"PASSWORD RESET TOKEN (dev only)")
+        print(f"Email: {user.email}")
+        print(f"Token: {token}")
+        print(f"Link:  {reset_link}")
+        print(f"Expires: {expires_at.isoformat()}")
+        print(f"{'='*60}\n")
+
+    # Always return success to prevent email enumeration
+    return {"message": "If an account with that email exists, a password reset link has been sent."}
+
+
+@app.post("/api/auth/reset-password")
+async def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset password using a valid token."""
+    # Validate new password
+    if len(body.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    # Find the token
+    reset_token = (
+        db.query(DBPasswordResetToken)
+        .filter(
+            DBPasswordResetToken.token == body.token,
+            DBPasswordResetToken.used == 0,
+        )
+        .first()
+    )
+
+    if not reset_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    # Check expiration
+    now = datetime.now(timezone.utc)
+    # Handle naive datetime from DB by assuming UTC
+    token_expires = reset_token.expires_at
+    if token_expires.tzinfo is None:
+        token_expires = token_expires.replace(tzinfo=timezone.utc)
+
+    if now > token_expires:
+        reset_token.used = 1
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+
+    # Update the user's password
+    user = db.query(DBUser).filter(DBUser.id == reset_token.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    user.hashed_password = hash_password(body.new_password)
+    reset_token.used = 1
+    db.commit()
+
+    return {"message": "Password has been reset successfully"}
 
 
 # ============================================================
