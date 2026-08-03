@@ -121,6 +121,7 @@ export const deleteBudget =
     try {
       await api.delete(`/api/budgets/${id}`)
       dispatch(removeBudgetFromState(id))
+      dispatch(fetchBudgetStatus(month, year))
       dispatch(triggerToast('Budget deleted.', 'info'))
     } catch (error) {
       console.error('Failed to delete budget:', error)

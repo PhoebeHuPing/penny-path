@@ -198,13 +198,14 @@ const SearchFilter: React.FC = () => {
 
             {/* Amount range */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              <span id="amount-range-label" className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                 Amount Range
-              </label>
-              <div className="flex items-center gap-2">
+              </span>
+              <div className="flex items-center gap-2" role="group" aria-labelledby="amount-range-label">
                 <input
                   type="number"
                   placeholder="Min"
+                  aria-label="Minimum amount"
                   value={localFilters.amount_min ?? ''}
                   onChange={(e) =>
                     setLocalFilters({
@@ -216,7 +217,6 @@ const SearchFilter: React.FC = () => {
                   min="0"
                   step="0.01"
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all text-sm"
-                  aria-label="Minimum amount"
                 />
                 <span className="text-slate-400 font-bold">–</span>
                 <input
