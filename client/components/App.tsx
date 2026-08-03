@@ -23,7 +23,14 @@ import ResetPasswordPage from './ResetPasswordPage'
 function App() {
   const dispatch = useAppDispatch()
   const { token, user } = useAppSelector((state) => state.auth)
-  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login')
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>(() => {
+    const params = new URLSearchParams(window.location.search)
+    const resetToken = params.get('token')
+    if (resetToken && window.location.pathname.includes('reset-password')) {
+      return 'reset-password'
+    }
+    return 'login'
+  })
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
   const [page, setPage] = useState<'dashboard' | 'settings'>('dashboard')
 
@@ -33,15 +40,6 @@ function App() {
       dispatch(fetchCurrentUser())
     }
   }, [dispatch, token])
-
-  // Check for reset token in URL on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const resetToken = params.get('token')
-    if (resetToken && window.location.pathname.includes('reset-password')) {
-      setAuthView('reset-password')
-    }
-  }, [])
 
   // Once authenticated, fetch data
   useEffect(() => {
