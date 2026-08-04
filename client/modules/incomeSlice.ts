@@ -42,6 +42,10 @@ export const incomeSlice = createSlice({
         state.incomes.pop()
       }
     },
+    updateIncomeSuccess: (state, action: PayloadAction<Income>) => {
+      const updated = action.payload
+      state.incomes = state.incomes.map((i) => (i.id === updated.id ? updated : i))
+    },
     deleteIncomeSuccess: (state, action: PayloadAction<number>) => {
       state.incomes = state.incomes.filter((i) => i.id !== action.payload)
       state.totalCount -= 1
@@ -55,7 +59,7 @@ export const incomeSlice = createSlice({
   },
 })
 
-export const { setIncomes, addIncomeSuccess, deleteIncomeSuccess, setLoading, setPage } =
+export const { setIncomes, addIncomeSuccess, updateIncomeSuccess, deleteIncomeSuccess, setLoading, setPage } =
   incomeSlice.actions
 
 // Async actions
@@ -103,6 +107,19 @@ export const removeIncome = (id: number) => async (dispatch: AppDispatch) => {
   } catch (error) {
     console.error('Failed to delete income:', error)
     dispatch(triggerToast('Failed to delete income', 'error'))
+  }
+}
+
+export const updateIncome = (id: number, income: Omit<Income, 'id'>) => async (dispatch: AppDispatch) => {
+  try {
+    const res = await api.put(`/api/incomes/${id}`, income)
+    dispatch(updateIncomeSuccess(res.data.data.income))
+    dispatch(triggerToast('Income updated successfully!', 'success'))
+  } catch (error) {
+    console.error('Failed to update income:', error)
+    const axiosError = error as AxiosError<{ detail?: string }>
+    const errorMsg = axiosError.response?.data?.detail || 'Failed to update income'
+    dispatch(triggerToast(errorMsg, 'error'))
   }
 }
 
