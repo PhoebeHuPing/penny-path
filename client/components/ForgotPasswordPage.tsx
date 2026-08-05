@@ -1,11 +1,8 @@
 import { useState, FormEvent } from 'react'
+import { Link } from 'react-router'
 import api from '../api'
 
-interface ForgotPasswordPageProps {
-  onSwitchToLogin: () => void
-}
-
-function ForgotPasswordPage({ onSwitchToLogin }: ForgotPasswordPageProps) {
+function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -62,13 +59,12 @@ function ForgotPasswordPage({ onSwitchToLogin }: ForgotPasswordPageProps) {
                 If an account with that email exists, we&apos;ve sent a password
                 reset link. Please check your inbox.
               </p>
-              <button
-                type="button"
-                onClick={onSwitchToLogin}
-                className="mt-4 text-sm text-slate-800 font-semibold hover:underline"
+              <Link
+                to="/login"
+                className="mt-4 inline-block text-sm text-slate-800 font-semibold hover:underline"
               >
                 Back to Sign In
-              </button>
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -111,13 +107,12 @@ function ForgotPasswordPage({ onSwitchToLogin }: ForgotPasswordPageProps) {
 
               <p className="text-center text-sm text-slate-500">
                 Remember your password?{' '}
-                <button
-                  type="button"
-                  onClick={onSwitchToLogin}
+                <Link
+                  to="/login"
                   className="text-slate-800 font-semibold hover:underline"
                 >
                   Sign In
-                </button>
+                </Link>
               </p>
             </form>
           )}

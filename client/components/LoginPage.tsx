@@ -1,13 +1,9 @@
 import { useState, FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { loginUser } from '../modules/authSlice'
 
-interface LoginPageProps {
-  onSwitchToRegister: () => void
-  onSwitchToForgotPassword: () => void
-}
-
-function LoginPage({ onSwitchToRegister, onSwitchToForgotPassword }: LoginPageProps) {
+function LoginPage() {
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.auth)
 
@@ -74,13 +70,12 @@ function LoginPage({ onSwitchToRegister, onSwitchToForgotPassword }: LoginPagePr
               placeholder="••••••••"
             />
             <div className="mt-1 text-right">
-              <button
-                type="button"
-                onClick={onSwitchToForgotPassword}
+              <Link
+                to="/forgot-password"
                 className="text-xs text-slate-500 hover:text-slate-800 hover:underline"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -94,13 +89,12 @@ function LoginPage({ onSwitchToRegister, onSwitchToForgotPassword }: LoginPagePr
 
           <p className="text-center text-sm text-slate-500">
             Don&apos;t have an account?{' '}
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
+            <Link
+              to="/register"
               className="text-slate-800 font-semibold hover:underline"
             >
               Create one
-            </button>
+            </Link>
           </p>
         </form>
       </div>

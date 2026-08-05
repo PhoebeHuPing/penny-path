@@ -5,6 +5,7 @@ import { fetchIncomes } from '../modules/incomeSlice'
 import { fetchDashboardSummary } from '../modules/dashboardSlice'
 import { fetchCurrentUser, logoutUser } from '../modules/authSlice'
 import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate, Link } from 'react-router'
 import ExpenseForm from './ExpenseForm'
 import IncomeForm from './IncomeForm'
 import Toast from './Toast'
@@ -20,98 +21,29 @@ import SettingsPage from './SettingsPage'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import ResetPasswordPage from './ResetPasswordPage'
 
-function App() {
-  const dispatch = useAppDispatch()
-  const { token, user } = useAppSelector((state) => state.auth)
-  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>(() => {
-    const params = new URLSearchParams(window.location.search)
-    const resetToken = params.get('token')
-    if (resetToken && window.location.pathname.includes('reset-password')) {
-      return 'reset-password'
-    }
-    return 'login'
-  })
-  const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
-  const [page, setPage] = useState<'dashboard' | 'settings'>('dashboard')
-
-  // On mount, try to fetch current user if we have a token
-  useEffect(() => {
-    if (token) {
-      dispatch(fetchCurrentUser())
-    }
-  }, [dispatch, token])
-
-  // Once authenticated, fetch data
-  useEffect(() => {
-    if (token && user) {
-      dispatch(fetchCategoryList())
-      dispatch(fetchExpenses(1))
-      dispatch(fetchAllExpensesForChart())
-      dispatch(fetchIncomes(1))
-      dispatch(fetchDashboardSummary())
-    }
-  }, [dispatch, token, user])
-
-  // Not authenticated - show login/register/forgot/reset
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAppSelector((state) => state.auth)
   if (!token) {
-    const renderAuthView = () => {
-      switch (authView) {
-        case 'forgot-password':
-          return (
-            <ForgotPasswordPage
-              onSwitchToLogin={() => setAuthView('login')}
-            />
-          )
-        case 'reset-password': {
-          const params = new URLSearchParams(window.location.search)
-          const resetToken = params.get('token') || ''
-          return (
-            <ResetPasswordPage
-              token={resetToken}
-              onSwitchToLogin={() => {
-                // Clear URL params when going back to login
-                window.history.replaceState({}, '', '/')
-                setAuthView('login')
-              }}
-            />
-          )
-        }
-        case 'register':
-          return (
-            <RegisterPage onSwitchToLogin={() => setAuthView('login')} />
-          )
-        default:
-          return (
-            <LoginPage
-              onSwitchToRegister={() => setAuthView('register')}
-              onSwitchToForgotPassword={() => setAuthView('forgot-password')}
-            />
-          )
-      }
-    }
-
-    return (
-      <>
-        <Toast />
-        {renderAuthView()}
-      </>
-    )
+    return <Navigate to="/login" replace />
   }
+  return <>{children}</>
+}
 
-  // Settings page
-  if (page === 'settings') {
-    return (
-      <>
-        <Toast />
-        <SettingsPage onBack={() => setPage('dashboard')} />
-      </>
-    )
+function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { token } = useAppSelector((state) => state.auth)
+  if (token) {
+    return <Navigate to="/" replace />
   }
+  return <>{children}</>
+}
+
+function DashboardPage() {
+  const dispatch = useAppDispatch()
+  const { user } = useAppSelector((state) => state.auth)
+  const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense')
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      <Toast />
-
       <header className="text-center mb-12 relative">
         <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
           PennyPath
@@ -124,13 +56,13 @@ function App() {
             <span className="text-sm text-slate-600">
               Hi, <span className="font-semibold">{user.display_name || user.username}</span>
             </span>
-            <button
-              onClick={() => setPage('settings')}
+            <Link
+              to="/settings"
               className="text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium"
               aria-label="Open settings"
             >
               ⚙ Settings
-            </button>
+            </Link>
             <button
               onClick={() => dispatch(logoutUser())}
               className="text-sm px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition font-medium"
@@ -187,6 +119,91 @@ function App() {
         </div>
       </main>
     </div>
+  )
+}
+
+function App() {
+  const dispatch = useAppDispatch()
+  const { token, user } = useAppSelector((state) => state.auth)
+
+  // On mount, try to fetch current user if we have a token
+  useEffect(() => {
+    if (token) {
+      dispatch(fetchCurrentUser())
+    }
+  }, [dispatch, token])
+
+  // Once authenticated, fetch data
+  useEffect(() => {
+    if (token && user) {
+      dispatch(fetchCategoryList())
+      dispatch(fetchExpenses(1))
+      dispatch(fetchAllExpensesForChart())
+      dispatch(fetchIncomes(1))
+      dispatch(fetchDashboardSummary())
+    }
+  }, [dispatch, token, user])
+
+  return (
+    <>
+      <Toast />
+      <Routes>
+        {/* Guest-only routes */}
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestRoute>
+              <RegisterPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestRoute>
+              <ForgotPasswordPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <GuestRoute>
+              <ResetPasswordPage />
+            </GuestRoute>
+          }
+        />
+
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all: redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   )
 }
 

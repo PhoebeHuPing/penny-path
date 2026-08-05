@@ -1,12 +1,9 @@
 import { useState, FormEvent } from 'react'
+import { Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { registerUser } from '../modules/authSlice'
 
-interface RegisterPageProps {
-  onSwitchToLogin: () => void
-}
-
-function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
+function RegisterPage() {
   const dispatch = useAppDispatch()
   const { loading, error } = useAppSelector((state) => state.auth)
 
@@ -136,13 +133,12 @@ function RegisterPage({ onSwitchToLogin }: RegisterPageProps) {
 
           <p className="text-center text-sm text-slate-500">
             Already have an account?{' '}
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
+            <Link
+              to="/login"
               className="text-slate-800 font-semibold hover:underline"
             >
               Sign in
-            </button>
+            </Link>
           </p>
         </form>
       </div>
