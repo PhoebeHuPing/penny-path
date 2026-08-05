@@ -1,12 +1,12 @@
 import { useState, FormEvent } from 'react'
+import { useSearchParams, useNavigate } from 'react-router'
 import api from '../api'
 
-interface ResetPasswordPageProps {
-  token: string
-  onSwitchToLogin: () => void
-}
+function ResetPasswordPage() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const token = searchParams.get('token') || ''
 
-function ResetPasswordPage({ token, onSwitchToLogin }: ResetPasswordPageProps) {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -43,6 +43,10 @@ function ResetPasswordPage({ token, onSwitchToLogin }: ResetPasswordPageProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoToLogin = () => {
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -83,7 +87,7 @@ function ResetPasswordPage({ token, onSwitchToLogin }: ResetPasswordPageProps) {
               </p>
               <button
                 type="button"
-                onClick={onSwitchToLogin}
+                onClick={handleGoToLogin}
                 className="mt-4 w-full py-3 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition"
               >
                 Sign In
@@ -146,7 +150,7 @@ function ResetPasswordPage({ token, onSwitchToLogin }: ResetPasswordPageProps) {
               <p className="text-center text-sm text-slate-500">
                 <button
                   type="button"
-                  onClick={onSwitchToLogin}
+                  onClick={handleGoToLogin}
                   className="text-slate-800 font-semibold hover:underline"
                 >
                   Back to Sign In

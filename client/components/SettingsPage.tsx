@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { changePassword, updateProfile } from '../modules/userSettingsSlice'
 
@@ -21,11 +22,8 @@ const SUPPORTED_CURRENCIES = [
   { code: 'MXN', label: 'Mexican Peso (MX$)' },
 ]
 
-interface SettingsPageProps {
-  onBack: () => void
-}
-
-function SettingsPage({ onBack }: SettingsPageProps) {
+function SettingsPage() {
+  const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
   const { loading } = useAppSelector((state) => state.userSettings)
@@ -77,7 +75,7 @@ function SettingsPage({ onBack }: SettingsPageProps) {
     <div className="max-w-2xl mx-auto px-4 py-12">
       <div className="flex items-center gap-4 mb-8">
         <button
-          onClick={onBack}
+          onClick={() => navigate('/')}
           className="text-sm px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition font-medium"
           aria-label="Back to dashboard"
         >
